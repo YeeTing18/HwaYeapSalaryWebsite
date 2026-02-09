@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salary Calculation Settings</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #8B0000;
+            --primary-dark: #4B0000;
+            --secondary: #A52A2A;
+            --accent: #FFD700;
+            --light-bg: #f8f9fa;
+            --dark-text: #2c3e50;
+            --success: #2e7d32;
+            --danger: #8B0000;
+            --sidebar-width: 280px;
+            --sidebar-collapsed-width: 70px;
+        }
+        
+        body {
+            background-color: #f5f7fb;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--dark-text);
+        }
+
+        /* Sidebar styles (same as other pages) */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 3px 0 15px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        #content {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+        }
+
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .formula-card {
+            margin-bottom: 20px;
+        }
+
+        .formula-input {
+            font-family: monospace;
+        }
+
+        .formula-preview {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .formula-description {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 15px 20px;
+            margin: 5px 10px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: white;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .nav-link i {
+            width: 25px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div id="sidebar">
+        <div class="sidebar-header p-4">
+            <img src="HwaYeapLogo.jpg" alt="Logo" style="width: 40px; height: 40px; margin-right: 10px;">
+            <h3 class="d-inline-block text-white mb-0">Salary System</h3>
+        </div>
+        <ul class="nav flex-column mt-4">
+            <li class="nav-item">
+                <a class="nav-link" href="main.html">
+                    <i class="fas fa-file-invoice-dollar"></i>Employee Salary Voucher
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="internSalaryVoucher.html">
+                    <i class="fas fa-file-invoice-dollar"></i>Intern Salary Voucher
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="employeePage.html">
+                    <i class="fas fa-users"></i>Employee Management
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="monthlySalary.html">
+                    <i class="fas fa-print"></i> <span>Print-BankIn Slip</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="record.html">
+                    <i class="fas fa-print"></i> <span>Print-Monthly Record</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="setting.html">
+                    <i class="fas fa-cog"></i>Settings
+                </a>
+            </li>
+            <li class="nav-item mt-4">
+                <a class="nav-link" href="login.html">
+                    <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div id="content">
+        <div class="container">
+            <h2 class="mb-4">Salary Calculation Settings</h2>
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card formula-card">
+                        <div class="card-body">
+                            <h5 class="card-title">日薪 SALARY PER DAYS</h5>
+                            <div class="formula-description">Calculate daily salary rate</div>
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control formula-input" id="dailySalaryFormula" 
+                                       value="BASIC/45/4*9" placeholder="Enter formula">
+                                <button class="btn btn-outline-primary" onclick="saveFormula('dailySalary')">Save</button>
+                            </div>
+                            <div class="formula-preview">
+                                Current Formula: <span id="dailySalaryPreview">BASIC/45/4*9</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card formula-card">
+                        <div class="card-body">
+                            <h5 class="card-title">时薪 SALARY PER HOURS</h5>
+                            <div class="formula-description">Calculate hourly salary rate</div>
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control formula-input" id="hourlySalaryFormula" 
+                                       value="BASIC/45/4" placeholder="Enter formula">
+                                <button class="btn btn-outline-primary" onclick="saveFormula('hourlySalary')">Save</button>
+                            </div>
+                            <div class="formula-preview">
+                                Current Formula: <span id="hourlySalaryPreview">BASIC/45/4</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card formula-card">
+                        <div class="card-body">
+                            <h5 class="card-title">OT-1.5</h5>
+                            <div class="formula-description">Calculate overtime rate (1.5x)</div>
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control formula-input" id="ot15Formula" 
+                                       value="HOURLY*1.5" placeholder="Enter formula">
+                                <button class="btn btn-outline-primary" onclick="saveFormula('ot15')">Save</button>
+                            </div>
+                            <div class="formula-preview">
+                                Current Formula: <span id="ot15Preview">HOURLY*1.5</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card formula-card">
+                        <div class="card-body">
+                            <h5 class="card-title">OT-2.0</h5>
+                            <div class="formula-description">Calculate overtime rate (2.0x)</div>
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control formula-input" id="ot20Formula" 
+                                       value="HOURLY*2.0" placeholder="Enter formula">
+                                <button class="btn btn-outline-primary" onclick="saveFormula('ot20')">Save</button>
+                            </div>
+                            <div class="formula-preview">
+                                Current Formula: <span id="ot20Preview">HOURLY*2.0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Available Variables</h5>
+                            <ul class="list-group">
+                                <li class="list-group-item">BASIC - Basic salary</li>
+                                <li class="list-group-item">HOURLY - Hourly rate</li>
+                                <li class="list-group-item">HOURS - Overtime hours</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Add Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAEdrpzI8RsyuN7LrlGvWVF6FaMmfIcADU",
+            authDomain: "hwayeap-1db99.firebaseapp.com",
+            databaseURL: "https://hwayeap-1db99-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "hwayeap-1db99",
+            storageBucket: "hwayeap-1db99.firebasestorage.app",
+            messagingSenderId: "393592107948",
+            appId: "1:393592107948:web:fa2031eb8f5f0cf4b04009",
+            measurementId: "G-35S9W4P3TS"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const database = getDatabase(app);
+
+        // Make Firebase functions available globally
+        window.database = database;
+        window.ref = ref;
+        window.set = set;
+        window.get = get;
+
+        // Load saved formulas when page loads
+        document.addEventListener('DOMContentLoaded', loadFormulas);
+    </script>
+    <script>
+        // Function to save formula
+        async function saveFormula(type) {
+            const formula = document.getElementById(`${type}Formula`).value;
+            if (!formula) {
+                alert('Please enter a formula');
+                return;
+            }
+
+            try {
+                await set(ref(database, `Settings/SalaryFormulas/${type}`), {
+                    formula: formula,
+                    updatedAt: new Date().toISOString()
+                });
+
+                document.getElementById(`${type}Preview`).textContent = formula;
+                alert('Formula saved successfully!');
+            } catch (error) {
+                console.error("Error saving formula:", error);
+                alert('Error saving formula. Please try again.');
+            }
+        }
+
+        // Function to load saved formulas
+        async function loadFormulas() {
+            try {
+                const formulasRef = ref(database, 'Settings/SalaryFormulas');
+                const snapshot = await get(formulasRef);
+
+                if (snapshot.exists()) {
+                    const formulas = snapshot.val();
+                    for (const [type, data] of Object.entries(formulas)) {
+                        const input = document.getElementById(`${type}Formula`);
+                        const preview = document.getElementById(`${type}Preview`);
+                        if (input && preview && data.formula) {
+                            input.value = data.formula;
+                            preview.textContent = data.formula;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Error loading formulas:", error);
+                alert('Error loading formulas. Please refresh the page.');
+            }
+        }
+    </script>
+</body>
+</html>
