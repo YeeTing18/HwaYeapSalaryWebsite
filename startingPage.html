@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starting Page</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: white;
+            font-family: "Poppins", sans-serif; /* Modern and clean font */
+            text-align: center;
+        }
+        img {
+            max-width: 200px; /* Adjusted smaller size */
+            width: 100%;
+            height: auto;
+        }
+        p {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333; /* Darker text for elegance */
+            margin-top: 15px;
+        }
+    </style>
+    <script>
+        setTimeout(function() {
+            window.location.href = "main.html"; // Change this to your actual main page URL
+        }, 3000); // Redirect after 3 seconds
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <img src="HwaYeapLogo.jpg" alt="HwaYeap Logo">
+    <p>Welcome to <span style="color: #ff0000;">Hwa Yeap Salary System</span>!<br>
+    After 3 seconds, you will be redirected to the main page.</p>
+</body>
+</html>
