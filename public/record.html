@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Salary Record</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #8B0000;
+            --primary-dark: #4B0000;
+            --secondary: #A52A2A;
+            --accent: #FFD700;
+            --light-bg: #f8f9fa;
+            --dark-text: #2c3e50;
+            --success: #2e7d32;
+            --danger: #8B0000;
+            --sidebar-width: 280px;
+            --sidebar-collapsed-width: 70px;
+        }
+        
+        body {
+            background-color: #f5f7fb;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--dark-text);
+            overflow-x: hidden;
+            transition: all 0.3s;
+        }
+        
+        /* Sidebar Styling */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 3px 0 15px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .sidebar-collapsed #sidebar {
+            width: var(--sidebar-collapsed-width);
+        }
+        
+        .sidebar-header {
+            padding: 25px 20px;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .sidebar-collapsed .sidebar-header {
+            padding: 25px 15px;
+        }
+        
+        .sidebar-header h3 {
+            font-weight: 600;
+            margin: 0;
+            font-size: 1.4rem;
+            display: inline-block;
+            transition: opacity 0.3s;
+        }
+        
+        .sidebar-collapsed .sidebar-header h3 {
+            opacity: 0;
+            width: 0;
+        }
+        
+        .sidebar-header img {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        
+        .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 15px 20px;
+            margin: 5px 10px;
+            border-radius: 5px;
+            transition: all 0.3s;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .sidebar-collapsed .nav-link {
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            color: white;
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .nav-link i {
+            width: 25px;
+            text-align: center;
+            margin-right: 10px;
+            font-size: 1.2rem;
+            vertical-align: middle;
+        }
+        
+        .sidebar-collapsed .nav-link i {
+            margin-right: 0;
+            font-size: 1.4rem;
+        }
+        
+        .nav-link span {
+            vertical-align: middle;
+        }
+        
+        .sidebar-collapsed .nav-link span {
+            display: none;
+        }
+        
+        /* Main Content */
+        #content {
+            padding: 20px;
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            transition: all 0.3s;
+        }
+        
+        .sidebar-collapsed #content {
+            margin-left: var(--sidebar-collapsed-width);
+            width: calc(100% - var(--sidebar-collapsed-width));
+        }
+
+        .company-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .company-logo {
+            max-width: 200px;
+            margin-bottom: 10px;
+        }
+        .selection-area {
+            margin-bottom: 30px;
+        }
+        .table th {
+            background-color: #f8f9fa;
+        }
+        .summary-tables {
+            margin-top: 40px;
+        }
+        .summary-title {
+            margin-top: 20px;
+            margin-bottom: 15px;
+        }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        .total-row {
+            font-weight: bold;
+            background-color: #f8f9fa;
+        }
+        .section-divider {
+            font-weight: bold;
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        /* Toggle Sidebar Button */
+        .toggle-sidebar {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .toggle-sidebar:hover {
+            background: var(--secondary);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            #sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar-collapsed #sidebar {
+                transform: translateX(0);
+                width: var(--sidebar-collapsed-width);
+            }
+            
+            #content {
+                margin-left: 0;
+                width: 100%;
+            }
+            
+            .sidebar-collapsed #content {
+                margin-left: var(--sidebar-collapsed-width);
+                width: calc(100% - var(--sidebar-collapsed-width));
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .details-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .deductions {
+                border-left: none;
+                border-top: 1px solid #ffecb3;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <div id="sidebar">
+            <div class="sidebar-header">
+                <img src="HwaYeapLogo.jpg" alt="Logo">
+                <h3>Salary System</h3>
+            </div>
+            <ul class="nav flex-column mt-4">
+                <li class="nav-item">
+                    <a class="nav-link" href="main.html">
+                        <i class="fas fa-file-invoice-dollar"></i> <span>Employee Salary Voucher</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="internSalaryVoucher.html">
+                        <i class="fas fa-file-invoice-dollar"></i> <span>Intern Salary Voucher</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="employeePage.html">
+                        <i class="fas fa-users"></i> <span>Employee Management</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="monthlySalary.html">
+                        <i class="fas fa-print"></i> <span>Print-BankIn Slip</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="#">
+                        <i class="fas fa-print"></i> <span>Print-Monthly Record</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="setting.html">
+                        <i class="fas fa-cog"></i> <span>Settings</span>
+                    </a>
+                </li>
+                <li class="nav-item mt-4">
+                    <a class="nav-link" href="login.html">
+                        <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div id="content">
+            <button class="toggle-sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <div class="container-fluid mt-4">
+                <!-- Company Header -->
+                <div class="company-header">
+                    <img src="HwaYeapLogo.jpg" alt="Company Logo" class="company-logo" style="width: 60px; height: 60px;">
+                    <h4>Hwa Yeap Engineering</h4>
+                    <p> 52 & 53, Jalan Pontian Maju 2, Taman Perindustrian, Mutiara, 82000 Pontian, Johor Darul Ta'zim</p>
+                </div>
+
+                <!-- Month and Year Selection -->
+                <div class="selection-area">
+                    <div class="row justify-content-center">
+                        <div class="col-md-3">
+                            <select class="form-select" id="monthSelect">
+                                <option value="January">January</option>
+                                <option value="February">February</option>
+                                <option value="March">March</option>
+                                <option value="April">April</option>
+                                <option value="May">May</option>
+                                <option value="June">June</option>
+                                <option value="July">July</option>
+                                <option value="August">August</option>
+                                <option value="September">September</option>
+                                <option value="October">October</option>
+                                <option value="November">November</option>
+                                <option value="December">December</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" class="form-control" id="yearInput" placeholder="Year" min="2000" max="2100">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary" onclick="fetchSalaryData()">Generate Report</button>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-success" onclick="printReport()">
+                                <i class="fas fa-print"></i> Print / Save PDF
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row justify-content-center">
+                        <div class="col-md-7">
+                            <div id="errorMessage" class="error-message"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Salary Table -->
+                <h3 class="text-center mb-4" id="tableTitle">Salary Record For <span id="periodDisplay"></span></h3>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Name</th>
+                                <th>IC No</th>
+                                <th>Position</th>
+                                <th colspan="3" style="text-align: center;background-color: #92c48c;">Earnings</th>
+                                <th colspan="8" style="text-align: center;background-color: #8ca8c4;">Deductions</th>
+                                <th>Additions</th>
+                                <th>Net Pay</th>
+                            </tr>
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th style="text-align: center;background-color: #92c48c;">Basic Pay</th>
+                                <th style="text-align: center;background-color: #92c48c;">Allowance</th>
+                                <th style="text-align: center;background-color: #92c48c;">OT</th>
+                                <th style="text-align: center;background-color: #8ca8c4;">EPF</th>
+                                <th style="text-align: center;background-color: #8ca8c4;">SOCSO</th>
+                                <th style="text-align: center;background-color: #8ca8c4;">EIS</th>
+                                <th style="text-align: center;background-color: #8ca8c4;">PCB</th>
+                                <th style="text-align: center;background-color: #8ca8c4;">Advance/Loan</th>
+                                <th style="text-align: center;background-color: #8ca8c4;">Daily</th>
+                                <th style="text-align: center;background-color: #8ca8c4;">Hours</th>
+                                <th style="text-align: center;background-color: #8ca8c4;">Allow. Ded.</th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="salaryTableBody">
+                            <!-- Data will be populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Loading indicator -->
+                <div id="loadingIndicator" class="loading d-none">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading salary data...</p>
+                </div>
+
+                <!-- Summary Tables -->
+                <div class="summary-tables">
+                    <!-- Combined Summary -->
+                    <!-- <h4 class="summary-title">Combined Summary (Employee + Employer)</h4> -->
+                    <!-- <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Total EPF</th>
+                                    <th>Total SOCSO</th>
+                                    <th>Total EIS</th>
+                                    <th>Total Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Combined Total</td>
+                                    <td id="combinedEPF">0.00</td>
+                                    <td id="combinedSOCSO">0.00</td>
+                                    <td id="combinedEIS">0.00</td>
+                                    <td id="combinedTotal">0.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div> -->
+
+                    <h4 class="summary-title">Contributions Summary</h4>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Contribution Type</th> <!-- EPF, SOCSO, EIS, etc. -->
+                                    <th>Employee</th> <!-- Employee Contributions -->
+                                    <th>Employer</th> <!-- Employer Contributions -->
+                                    <th>Total</th> <!-- Total (Employee + Employer) -->
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>EPF</td>
+                                    <td id="totalEmployeeEPF">0.00</td>
+                                    <td id="totalEmployerEPF">0.00</td>
+                                    <td id="combinedEPF">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>SOCSO</td>
+                                    <td id="totalEmployeeSOCSO">0.00</td>
+                                    <td id="totalEmployerSOCSO">0.00</td>
+                                    <td id="combinedSOCSO">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>EIS</td>
+                                    <td id="totalEmployeeEIS">0.00</td>
+                                    <td id="totalEmployerEIS">0.00</td>
+                                    <td id="combinedEIS">0.00</td>
+                                </tr>
+                               
+                                <!-- <tr>
+                                    <td>Total </td>
+                                    <td id="totalEmployeeContribution">0.00</td>
+                                    <td id="totalEmployerContribution">0.00</td>
+                                    <td id="combinedTotal">0.00</td>
+                                </tr> -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Firebase Configuration -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+        import { getDatabase, ref, get, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAEdrpzI8RsyuN7LrlGvWVF6FaMmfIcADU",
+            authDomain: "hwayeap-1db99.firebaseapp.com",
+            databaseURL: "https://hwayeap-1db99-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "hwayeap-1db99",
+            storageBucket: "hwayeap-1db99.firebasestorage.app",
+            messagingSenderId: "393592107948",
+            appId: "1:393592107948:web:fa2031eb8f5f0cf4b04009",
+            measurementId: "G-35S9W4P3TS"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const database = getDatabase(app);
+
+        // Make Firebase functions available globally
+        window.database = database;
+        window.ref = ref;
+        window.get = get;
+        window.onValue = onValue;
+        window.set = set;
+    </script>
+
+    <!-- Application Scripts -->
+    <script>
+        // Helper function for number formatting - defined globally
+        window.formatNumber = function(num) {
+            if (num === null || num === undefined) return '0.00';
+            return Number(parseFloat(num)).toFixed(2);
+        };
+
+        // Toggle sidebar functionality
+        document.querySelector('.toggle-sidebar').addEventListener('click', function() {
+            document.body.classList.toggle('sidebar-collapsed');
+            
+            // Save state to localStorage
+            if (document.body.classList.contains('sidebar-collapsed')) {
+                localStorage.setItem('sidebarState', 'collapsed');
+            } else {
+                localStorage.setItem('sidebarState', 'expanded');
+            }
+        });
+        
+        // Check localStorage for sidebar state
+        if (localStorage.getItem('sidebarState') === 'collapsed') {
+            document.body.classList.add('sidebar-collapsed');
+        }
+
+        // Set current month and year as default
+        window.onload = function() {
+            const now = new Date();
+            document.getElementById('monthSelect').value = now.toLocaleString('default', { month: 'long' });
+            document.getElementById('yearInput').value = now.getFullYear();
+            updatePeriodDisplay();
+        };
+
+        function updatePeriodDisplay() {
+            const month = document.getElementById('monthSelect').value;
+            const year = document.getElementById('yearInput').value;
+            document.getElementById('periodDisplay').textContent = month + ' ' + year;
+        }
+
+      
+async function fetchSalaryData() {
+    const month = document.getElementById('monthSelect').value;
+    const year = document.getElementById('yearInput').value;
+    const errorElement = document.getElementById('errorMessage');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const tableBody = document.getElementById('salaryTableBody');
+
+    // Input validation
+    if (!year || year < 2000 || year > 2100) {
+        errorElement.textContent = 'Please enter a valid year between 2000 and 2100';
+        return;
+    }
+
+    try {
+        errorElement.textContent = '';
+        loadingIndicator.classList.remove('d-none');
+        tableBody.innerHTML = '';
+
+        // Get employee data for position information
+        const employeeRef = ref(database, 'Employee');
+        const employeeSnapshot = await get(employeeRef);
+        const employeeData = {};
+        
+        employeeSnapshot.forEach((empSnapshot) => {
+            const emp = empSnapshot.val();
+            employeeData[empSnapshot.key] = {
+                icNumber: emp.icNumber,
+                position: emp.position
+            };
+        });
+
+        // Get all salary records for the selected month and year
+        const salaryRef = ref(database, `Salary/${year}/${month}`);
+        const snapshot = await get(salaryRef);
+
+        if (!snapshot.exists()) {
+            tableBody.innerHTML = '<tr><td colspan="17" class="text-center">No salary records found for this period</td></tr>';
+            resetSummaryTables();
+            return;
+        }
+
+        // Process and display data
+        let html = '';
+        let index = 1;
+        let totalEmployeeEpf = 0;
+        let totalEmployeeSocso = 0;
+        let totalEmployeeEis = 0;
+        let totalEmployeePcb = 0;
+        let totalEmployerEpf = 0;
+        let totalEmployerSocso = 0;
+        let totalEmployerEis = 0;
+        let totalDeductions = 0;
+
+        // Sort employees by position
+        const employees = [];
+        const interns = [];
+
+        snapshot.forEach((employeeSnapshot) => {
+            const employeeName = employeeSnapshot.key;
+            const salaryData = employeeSnapshot.val();
+            const employeeInfo = employeeData[employeeName] || { position: 'Unknown', icNumber: '-' };
+            
+            const record = {
+                name: employeeName,
+                position: employeeInfo.position,
+                icNumber: employeeInfo.icNumber,
+                salary: salaryData
+            };
+
+            if (employeeInfo.position && employeeInfo.position.toLowerCase().includes('intern')) {
+                interns.push(record);
+            } else {
+                employees.push(record);
+            }
+        });
+
+        // Process employees first
+        if (employees.length > 0) {
+            html += `<tr class="section-divider"><td colspan="17">Employees</td></tr>`;
+            let employeeSubtotals = processRecords(employees, index);
+            html += employeeSubtotals.html;
+            html += generateTotalRow('Employee Subtotal', employeeSubtotals);
+            index += employees.length;
+            
+            // Accumulate totals
+            totalEmployeeEpf += employeeSubtotals.subtotals.epf;
+            totalEmployeeSocso += employeeSubtotals.subtotals.socso;
+            totalEmployeeEis += employeeSubtotals.subtotals.eis;
+            totalEmployeePcb += employeeSubtotals.subtotals.pcb;
+            totalEmployerEpf += employeeSubtotals.subtotals.employerEpf;
+            totalEmployerSocso += employeeSubtotals.subtotals.employerSocso;
+            totalEmployerEis += employeeSubtotals.subtotals.employerEis;
+            totalDeductions += employeeSubtotals.subtotals.totalDeductions;
+        }
+
+        // Process interns
+        if (interns.length > 0) {
+            html += `<tr class="section-divider"><td colspan="17">Interns</td></tr>`;
+            let internSubtotals = processRecords(interns, index);
+            html += internSubtotals.html;
+            html += generateTotalRow('Intern Subtotal', internSubtotals);
+            
+            // Accumulate totals
+            totalEmployeeEpf += internSubtotals.subtotals.epf;
+            totalEmployeeSocso += internSubtotals.subtotals.socso;
+            totalEmployeeEis += internSubtotals.subtotals.eis;
+            totalEmployeePcb += internSubtotals.subtotals.pcb;
+            totalEmployerEpf += internSubtotals.subtotals.employerEpf;
+            totalEmployerSocso += internSubtotals.subtotals.employerSocso;
+            totalEmployerEis += internSubtotals.subtotals.employerEis;
+            totalDeductions += internSubtotals.subtotals.totalDeductions;
+        }
+
+        tableBody.innerHTML = html;
+
+        // Update all summary tables
+        updateAllSummaryTables(
+            totalEmployeeEpf, 
+            totalEmployeeSocso, 
+            totalEmployeeEis, 
+            totalEmployeePcb,
+            totalDeductions, 
+            totalEmployerEpf, 
+            totalEmployerSocso, 
+            totalEmployerEis
+        );
+        updatePeriodDisplay();
+
+    } catch (error) {
+        console.error('Error:', error);
+        errorElement.textContent = 'Error loading salary data. Please try again.';
+        resetSummaryTables();
+    } finally {
+        loadingIndicator.classList.add('d-none');
+    }
+}
+
+function processRecords(records, startIndex) {
+    let html = '';
+    let index = startIndex;
+    let subtotals = {
+        basicPay: 0,
+        allowance: 0,
+        overtime: 0,
+        epf: 0,
+        socso: 0,
+        eis: 0,
+        pcb: 0,
+        advanceLoan: 0,
+        daily: 0,
+        hours: 0,
+        allowanceDeduction: 0,
+        additions: 0,
+        netPay: 0,
+        totalDeductions: 0,
+        employerEpf: 0,
+        employerSocso: 0,
+        employerEis: 0
+    };
+
+    records.forEach(record => {
+        const salaryData = record.salary;
+        
+        // Calculate total overtime
+        let totalOT = 0;
+        if (salaryData.overtime) {
+            totalOT = salaryData.overtime.reduce((sum, ot) => sum + (parseFloat(ot.amount) || 0), 0);
+        }
+
+        // Get deductions
+        const deductions = salaryData.deductions || {};
+        
+        // Check employee position to determine correct field names for daily and hours deductions
+        let dailyDeductionAmount, hoursDeductionAmount;
+        
+        if (record.position && record.position.toLowerCase().includes('intern')) {
+            // Intern data structure
+            dailyDeductionAmount = parseFloat(deductions.dailyDeduction || 0);
+            hoursDeductionAmount = parseFloat(deductions.hoursDeduction || 0);
+        } else {
+            // Employee data structure
+            dailyDeductionAmount = parseFloat(deductions.dailyDeductionTotal || 0);
+            hoursDeductionAmount = parseFloat(deductions.hoursDeductionTotal || 0);
+        }
+        
+        const employeeDeductions = {
+            epf: parseFloat(deductions.epfEmployee || 0),
+            socso: parseFloat(deductions.socso || 0),
+            eis: parseFloat(deductions.eis || 0),
+            pcb: parseFloat(deductions.pcb || 0),
+            advanceLoan: parseFloat(deductions.advanceLoan || 0),
+            daily: dailyDeductionAmount,
+            hours: hoursDeductionAmount,
+            allowance: parseFloat(deductions.allowanceDeductions || 0)
+        };
+
+        // Get employer contributions
+        const employerContributions = salaryData.employerContributions || {};
+        const employerEpf = parseFloat(employerContributions.epf || 0);
+        const employerSocso = parseFloat(employerContributions.socso || 0);
+        const employerEis = parseFloat(employerContributions.eis || 0);
+
+        // Calculate total deductions for this employee
+        const totalEmployeeDeductions = 
+            employeeDeductions.epf + 
+            employeeDeductions.socso + 
+            employeeDeductions.eis + 
+            employeeDeductions.pcb + 
+            employeeDeductions.advanceLoan + 
+            employeeDeductions.daily + 
+            employeeDeductions.hours + 
+            employeeDeductions.allowance;
+
+        // Update subtotals
+        subtotals.basicPay += parseFloat(salaryData.basicPay || 0);
+        subtotals.allowance += parseFloat(salaryData.allowances || 0);
+        subtotals.overtime += totalOT;
+        subtotals.epf += employeeDeductions.epf;
+        subtotals.socso += employeeDeductions.socso;
+        subtotals.eis += employeeDeductions.eis;
+        subtotals.pcb += employeeDeductions.pcb;
+        subtotals.advanceLoan += employeeDeductions.advanceLoan;
+        subtotals.daily += employeeDeductions.daily;
+        subtotals.hours += employeeDeductions.hours;
+        subtotals.allowanceDeduction += employeeDeductions.allowance;
+        subtotals.additions += parseFloat(salaryData.totalAdditions || 0);
+        subtotals.netPay += parseFloat(salaryData.netPay || 0);
+        subtotals.totalDeductions += totalEmployeeDeductions;
+        subtotals.employerEpf += employerEpf;
+        subtotals.employerSocso += employerSocso;
+        subtotals.employerEis += employerEis;
+
+        html += `
+            <tr>
+                <td>${index++}</td>
+                <td>${record.name}</td>
+                <td>${record.icNumber}</td>
+                <td>${record.position}</td>
+                <td style="text-align: center;background-color: #92c48c;">${formatNumber(salaryData.basicPay || 0)}</td>
+                <td style="text-align: center;background-color: #92c48c;">${formatNumber(salaryData.allowances || 0)}</td>
+                <td style="text-align: center;background-color: #92c48c;">${formatNumber(totalOT)}</td>
+                <td style="text-align: center;background-color: #8ca8c4;">${formatNumber(employeeDeductions.epf)}</td>
+                <td style="text-align: center;background-color: #8ca8c4;">${formatNumber(employeeDeductions.socso)}</td>
+                <td style="text-align: center;background-color: #8ca8c4;">${formatNumber(employeeDeductions.eis)}</td>
+                <td style="text-align: center;background-color: #8ca8c4;">${formatNumber(employeeDeductions.pcb)}</td>
+                <td style="text-align: center;background-color: #8ca8c4;">${formatNumber(employeeDeductions.advanceLoan)}</td>
+                <td style="text-align: center;background-color: #8ca8c4;">${formatNumber(employeeDeductions.daily)}</td>
+                <td style="text-align: center;background-color: #8ca8c4;">${formatNumber(employeeDeductions.hours)}</td>
+                <td style="text-align: center;background-color: #8ca8c4;">${formatNumber(employeeDeductions.allowance)}</td>
+                <td>${formatNumber(salaryData.totalAdditions || 0)}</td>
+                <td>${formatNumber(salaryData.netPay || 0)}</td>
+            </tr>
+        `;
+    });
+
+    return { html, subtotals };
+}
+        function generateTotalRow(label, data) {
+            return `
+                <tr class="total-row">
+                    <td colspan="4">${label}</td>
+                    <td>${formatNumber(data.subtotals.basicPay)}</td>
+                    <td>${formatNumber(data.subtotals.allowance)}</td>
+                    <td>${formatNumber(data.subtotals.overtime)}</td>
+                    <td>${formatNumber(data.subtotals.epf)}</td>
+                    <td>${formatNumber(data.subtotals.socso)}</td>
+                    <td>${formatNumber(data.subtotals.eis)}</td>
+                    <td>${formatNumber(data.subtotals.pcb)}</td>
+                    <td>${formatNumber(data.subtotals.advanceLoan)}</td>
+                    <td>${formatNumber(data.subtotals.daily)}</td>
+                    <td>${formatNumber(data.subtotals.hours)}</td>
+                    <td>${formatNumber(data.subtotals.allowanceDeduction)}</td>
+                    <td>${formatNumber(data.subtotals.additions)}</td>
+                    <td>${formatNumber(data.subtotals.netPay)}</td>
+                </tr>
+            `;
+        }
+
+        function updateAllSummaryTables(totalEpf, totalSocso, totalEis, totalPcb, totalDeductions, employerEpf, employerSocso, employerEis) {
+            // Update employee contributions
+            document.getElementById('totalEmployeeEPF').textContent = formatNumber(totalEpf);
+            document.getElementById('totalEmployeeSOCSO').textContent = formatNumber(totalSocso);
+            document.getElementById('totalEmployeeEIS').textContent = formatNumber(totalEis);
+            // document.getElementById('totalEmployeeContribution').textContent = 
+            // formatNumber(totalEpf + totalSocso + totalEis);
+            // document.getElementById('totalEmployeePCB').textContent = formatNumber(totalPcb);
+            // document.getElementById('totalDeductions').textContent = formatNumber(totalDeductions);
+
+            // Update employer contributions
+            document.getElementById('totalEmployerEPF').textContent = formatNumber(employerEpf);
+            document.getElementById('totalEmployerSOCSO').textContent = formatNumber(employerSocso);
+            document.getElementById('totalEmployerEIS').textContent = formatNumber(employerEis);
+            // document.getElementById('totalEmployerContribution').textContent = 
+            //     formatNumber(employerEpf + employerSocso + employerEis);
+
+            // Update combined totals
+            document.getElementById('combinedEPF').textContent = formatNumber(totalEpf + employerEpf);
+            document.getElementById('combinedSOCSO').textContent = formatNumber(totalSocso + employerSocso);
+            document.getElementById('combinedEIS').textContent = formatNumber(totalEis + employerEis);
+            // document.getElementById('combinedTotal').textContent = 
+            //     formatNumber(totalEpf + employerEpf + totalSocso + employerSocso + totalEis + employerEis);
+        }
+
+        function resetSummaryTables() {
+            updateAllSummaryTables(0, 0, 0, 0, 0, 0, 0, 0);
+        }
+
+        // Add the print function
+        function printReport() {
+            const printWindow = window.open('', '', 'height=600,width=800');
+            const month = document.getElementById('monthSelect').value;
+            const year = document.getElementById('yearInput').value;
+            
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Salary Record - ${month} ${year}</title>
+                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                    <style>
+                        @page {
+                            size: landscape;
+                            margin: 10mm;
+                        }
+                        @media print {
+                            body {
+                                padding: 0;
+                                margin: 0;
+                            }
+                            .table {
+                                font-size: 8pt;
+                                width: 100%;
+                                margin: 0;
+                                padding: 0;
+                            }
+                            .table td, .table th {
+                                padding: 2px !important;
+                                border: 1px solid #000 !important;
+                            }
+                            .section-divider {
+                                background-color: #fff !important;
+                                color: #000 !important;
+                                font-weight: bold;
+                                border: 1px solid #000 !important;
+                            }
+                            .total-row {
+                                background-color: #fff !important;
+                                font-weight: bold;
+                            }
+                            .company-header {
+                                margin-bottom: 10px !important;
+                            }
+                            .company-header h4 {
+                                margin: 5px 0 !important;
+                                font-size: 12pt;
+                            }
+                            .company-header p {
+                                margin: 0 !important;
+                                font-size: 8pt;
+                            }
+                            .company-logo {
+                                width: 40px !important;
+                                height: 40px !important;
+                                margin: 5px 0 !important;
+                            }
+                            h3 {
+                                font-size: 12pt !important;
+                                margin: 5px 0 !important;
+                            }
+                            .summary-tables {
+                                margin-top: 10px !important;
+                            }
+                            .summary-title {
+                                font-size: 10pt !important;
+                                margin: 5px 0 !important;
+                            }
+                            [style*="background-color"] {
+                                background-color: #fff !important;
+                            }
+                            .no-print {
+                                display: none !important;
+                            }
+                            * {
+                                color: #000 !important;
+                            }
+                        }
+                        body { padding: 10px; }
+                        .company-header { text-align: center; margin-bottom: 20px; }
+                    </style>
+                </head>
+                <body>
+            `);
+            
+            // Get the content
+            const content = document.querySelector('.container-fluid').cloneNode(true);
+            
+            // Remove the selection area
+            const selectionArea = content.querySelector('.selection-area');
+            if (selectionArea) selectionArea.remove();
+            
+            // Remove loading indicator
+            const loadingIndicator = content.querySelector('#loadingIndicator');
+            if (loadingIndicator) loadingIndicator.remove();
+            
+            printWindow.document.write(content.innerHTML);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            
+            // Wait for resources to load
+            printWindow.onload = function() {
+                printWindow.print();
+                // printWindow.close(); // Uncomment this if you want the window to close after printing
+            };
+        }
+    </script>
+</body>
+</html>

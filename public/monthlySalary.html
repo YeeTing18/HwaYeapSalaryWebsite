@@ -1,0 +1,2595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Print BankIn Slip</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Add SheetJS for Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <!-- Add html2pdf for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Add EmailJS -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script>
+        (function() {
+            // emailjs.init("zw2cV0IU1QANU-kzn"); // EmailJS public key
+            emailjs.init("LKT9L0ZiLFp3LNj7"); // EmailJS public key
+
+        })();
+    </script>
+    <style>
+        :root {
+            --primary: #8B0000;
+            --primary-dark: #4B0000;
+            --secondary: #A52A2A;
+            --accent: #FFD700;
+            --light-bg: #f8f9fa;
+            --dark-text: #2c3e50;
+            --success: #2e7d32;
+            --danger: #8B0000;
+            --sidebar-width: 280px;
+            --sidebar-collapsed-width: 70px;
+        }
+        
+        body {
+            background-color: #f5f7fb;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--dark-text);
+            overflow-x: hidden;
+            transition: all 0.3s;
+        }
+        
+        /* Sidebar Styling */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 3px 0 15px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .sidebar-collapsed #sidebar {
+            width: var(--sidebar-collapsed-width);
+        }
+        
+        .sidebar-header {
+            padding: 25px 20px;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .sidebar-collapsed .sidebar-header {
+            padding: 25px 15px;
+        }
+        
+        .sidebar-header h3 {
+            font-weight: 600;
+            margin: 0;
+            font-size: 1.4rem;
+            display: inline-block;
+            transition: opacity 0.3s;
+        }
+        
+        .sidebar-collapsed .sidebar-header h3 {
+            opacity: 0;
+            width: 0;
+        }
+        
+        .sidebar-header img {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        
+        .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 15px 20px;
+            margin: 5px 10px;
+            border-radius: 5px;
+            transition: all 0.3s;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .sidebar-collapsed .nav-link {
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            color: white;
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .nav-link i {
+            width: 25px;
+            text-align: center;
+            margin-right: 10px;
+            font-size: 1.2rem;
+            vertical-align: middle;
+        }
+        
+        .sidebar-collapsed .nav-link i {
+            margin-right: 0;
+            font-size: 1.4rem;
+        }
+        
+        .nav-link span {
+            vertical-align: middle;
+        }
+        
+        .sidebar-collapsed .nav-link span {
+            display: none;
+        }
+        
+        /* Main Content */
+        #content {
+            padding: 20px;
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            transition: all 0.3s;
+        }
+        
+        .sidebar-collapsed #content {
+            margin-left: var(--sidebar-collapsed-width);
+            width: calc(100% - var(--sidebar-collapsed-width));
+        }
+        
+        .page-header {
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .toggle-sidebar {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .toggle-sidebar:hover {
+            background: var(--secondary);
+        }
+        
+        /* Salary Voucher Styling */
+        .voucher-container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .voucher-header {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .voucher-header h2 {
+            font-size: 1.8rem;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        
+        .voucher-header::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(to right, var(--accent), #ffab00);
+        }
+        
+        .employee-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 25px;
+            background-color: #f5f5f5;
+            border-bottom: 2px dashed #e0e0e0;
+        }
+        
+        .info-group {
+            margin-bottom: 10px;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #37474f;
+            display: inline-block;
+            width: 80px;
+        }
+        
+        .salary-period {
+            background-color: #FFF0F0;
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary);
+            border-bottom: 1px solid #FFD6D6;
+        }
+        
+        .details-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        }
+        
+        .earnings, .deductions {
+            padding: 25px;
+        }
+        
+        .deductions {
+            background-color: #fff8e1;
+            border-left: 1px solid #ffecb3;
+        }
+        
+        .section-title {
+            color: var(--primary);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #CD5C5C;
+            font-size: 1.2rem;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed #e0e0e0;
+        }
+        
+        .detail-label {
+            color: #455a64;
+        }
+        
+        .detail-value {
+            font-weight: 600;
+            color: #263238;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-top: 10px;
+        }
+        
+        .gross-total {
+            color: var(--success);
+            border-top: 2px solid #81c784;
+        }
+        
+        .deductions-total {
+            color: var(--danger);
+            border-top: 2px solid #CD5C5C;
+        }
+        
+        .net-pay {
+            padding: 25px;
+            background-color: #FFF0F0;
+            border-top: 2px solid #FFD6D6;
+            border-bottom: 2px dashed #e0e0e0;
+        }
+        
+        .net-pay-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #8B0000;
+        }
+        
+        .employer-contributions {
+            padding: 25px;
+            background-color: #FFF0F0;
+        }
+        
+        .contributions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .contribution-item {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .signature-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 25px;
+            background-color: #f5f5f5;
+            border-top: 2px dashed #e0e0e0;
+        }
+        
+        .signature-group {
+            text-align: center;
+        }
+        
+        .signature-label {
+            font-weight: 600;
+            color: #455a64;
+            margin-bottom: 10px;
+        }
+        
+        .signature-box {
+            height: 80px;
+            border: 1px dashed #bdbdbd;
+            border-radius: 5px;
+            margin: 0 auto;
+            width: 90%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: white;
+            color: #9e9e9e;
+            font-style: italic;
+        }
+        
+        /* Watermark */
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            font-size: 8rem;
+            color: rgba(139, 0, 0, 0.05);
+            font-weight: 900;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            #sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar-collapsed #sidebar {
+                transform: translateX(0);
+                width: var(--sidebar-collapsed-width);
+            }
+            
+            #content {
+                margin-left: 0;
+                width: 100%;
+            }
+            
+            .sidebar-collapsed #content {
+                margin-left: var(--sidebar-collapsed-width);
+                width: calc(100% - var(--sidebar-collapsed-width));
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .details-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .deductions {
+                border-left: none;
+                border-top: 1px solid #ffecb3;
+            }
+            
+            .voucher-header h2 {
+                font-size: 1.4rem;
+            }
+            
+            .salary-period {
+                font-size: 1rem;
+            }
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .action-buttons button {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 8px 15px;
+        }
+
+        @media print {
+            /* Reset all colors to black and white */
+            * {
+                color: black !important;
+                background-color: white !important;
+                box-shadow: none !important;
+                text-shadow: none !important;
+            }
+
+            /* Hide elements not needed for printing */
+            .toggle-sidebar,
+            .salary-period-selector,
+            .action-buttons,
+            #sidebar,
+            .btn-group,
+            .save-section,
+            .salary-period,
+            .page-header,
+            .row.mb-4 {
+                display: none !important;
+            }
+
+            /* Adjust layout for printing */
+            #content {
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+            }
+
+            /* Style the voucher for printing */
+            .voucher-container {
+                box-shadow: none !important;
+                border: 1px solid #000 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                font-size: 8pt !important;
+            }
+
+            .voucher-header {
+                background: white !important;
+                border-bottom: 2px solid #000 !important;
+                padding: 20px !important;
+                width: 100% !important;
+            }
+
+            .voucher-header h2 {
+                color: black !important;
+                font-size: 12pt !important;
+                margin: 0 !important;
+            }
+
+            /* Style employee info to be on one line */
+            .employee-info {
+                display: flex !important;
+                justify-content: space-between !important;
+                padding: 3px 5px !important;
+                background: white !important;
+                border-bottom: 1px solid #000 !important;
+            }
+
+            .info-group {
+                display: inline-block !important;
+                white-space: nowrap !important;
+                font-size: 8pt !important;
+            }
+
+            .info-label, .info-value {
+                display: inline !important;
+                font-size: 8pt !important;
+            }
+
+            /* Remove any spacing between label and value */
+            .info-label + .info-value {
+                margin-left: 2px !important;
+            }
+            .bank-account {
+    margin-left: -5px !important; /* Move bank account text left */
+}
+  
+            /* Create two-column layout for main content */
+            .main-content {
+                display: flex !important;
+                width: 100% !important;
+            }
+
+            .left-column {
+                width: 55% !important;
+                border-right: 1px solid #000 !important;
+                padding-right: 5px !important;
+            }
+
+            .right-column {
+                width: 45% !important;
+                padding-left: 5px !important;
+            }
+
+            .details-section,
+            .additions-section,
+            .net-pay {
+                width: 100% !important;
+            }
+
+            .earnings, .deductions {
+                background: white !important;
+                border: 1px solid #000 !important;
+                padding: 5px !important;
+            }
+
+            .section-title {
+                color: black !important;
+                border-bottom: 1px solid #000 !important;
+                font-size: 9pt !important;
+                margin: 3px 0 !important;
+                padding-bottom: 3px !important;
+            }
+
+            .detail-row {
+                border-bottom: 1px solid #000 !important;
+                padding: 2px 0 !important;
+                font-size: 8pt !important;
+                display: flex !important;
+                justify-content: space-between !important;
+            }
+
+            .total-row {
+                border-top: 1px solid #000 !important;
+                padding: 3px 0 !important;
+                font-size: 9pt !important;
+                display: flex !important;
+                justify-content: space-between !important;
+            }
+
+            .gross-total, .deductions-total {
+                color: black !important;
+            }
+
+            .net-pay {
+                background: white !important;
+                border: 1px solid #000 !important;
+                padding: 5px !important;
+            }
+
+            .net-pay-row {
+                color: black !important;
+                font-size: 9pt !important;
+                display: flex !important;
+                justify-content: space-between !important;
+            }
+
+            .employer-contributions {
+                background: white !important;
+                padding: 5px !important;
+            }
+
+            .contribution-item {
+                background: white !important;
+                border: 1px solid #000 !important;
+                margin-bottom: 5px !important;
+                padding: 3px !important;
+                font-size: 8pt !important;
+            }
+
+            .contribution-label {
+                font-size: 8pt !important;
+            }
+
+            .contribution-value {
+                font-size: 8pt !important;
+            }
+
+            .signature-section {
+                background: white !important;
+                border-top: 1px solid #000 !important;
+                padding: 5px !important;
+            }
+
+            .signature-box {
+                border: 1px solid #000 !important;
+                height: 40px !important;
+                margin-bottom: 10px !important;
+            }
+
+            .signature-label {
+                font-size: 8pt !important;
+                margin-bottom: 3px !important;
+            }
+
+            /* Adjust font sizes for better print readability */
+            body {
+                font-size: 12pt !important;
+            }
+
+            h1, h2, h3 {
+                font-size: 14pt !important;
+            }
+
+            .detail-label, .detail-value {
+                font-size: 11pt !important;
+            }
+
+            /* Ensure all borders are visible */
+            .card, .voucher-container, .section-title, .detail-row, .total-row {
+                border-color: #000 !important;
+            }
+
+            /* Remove any gradients */
+            .voucher-header, .btn-primary, .nav-link {
+                background: white !important;
+            }
+
+            /* Ensure text is readable */
+            .info-label, .detail-label, .signature-label {
+                color: black !important;
+            }
+
+            /* Remove any decorative elements */
+            .watermark {
+                display: none !important;
+            }
+
+            /* Hide overtime calculation details in print */
+            .overtime-details {
+                display: none !important;
+                visibility: hidden !important;
+            }
+
+            .overtime-entry {
+                display: block !important;
+                text-align: right !important;
+            }
+
+            .overtime-amount {
+                display: inline-block !important;
+                text-align: right !important;
+            }
+
+            /* Ensure other detail rows maintain their layout */
+            .earnings .detail-row:not(.overtime-entry),
+            .deductions .detail-row,
+            .additions-section .detail-row {
+                display: flex !important;
+                justify-content: space-between !important;
+            }
+
+            .earnings .detail-row:not(.overtime-entry) span:first-child,
+            .deductions .detail-row span:first-child,
+            .additions-section .detail-row span:first-child {
+                display: inline-block !important;
+            }
+
+            .salary-calculations {
+                background: white !important;
+                border-bottom: 1px solid #000 !important;
+                padding: 5px 10px !important;
+                margin: 0 !important;
+            }
+
+            .calculations-grid {
+                display: flex !important;
+                justify-content: space-between !important;
+                gap: 10px !important;
+                margin: 0 !important;
+            }
+
+            .calculation-item {
+                background: white !important;
+                border: 1px solid #000 !important;
+                padding: 3px 8px !important;
+                flex: 1 !important;
+                text-align: center !important;
+                min-width: 0 !important;
+            }
+
+            .calculation-label {
+                font-size: 7pt !important;
+                margin-bottom: 2px !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+            }
+
+            .calculation-value {
+                font-size: 8pt !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+            }
+
+            .salary-calculations .section-title {
+                font-size: 8pt !important;
+                margin: 0 0 5px 0 !important;
+                padding: 0 !important;
+                border: none !important;
+            }
+
+            .remarks-section {
+                background: white !important;
+                border: 1px solid #000 !important;
+                padding: 10px !important;
+                margin-bottom: 10px !important;
+            }
+
+            .remarks-content {
+                background: white !important;
+                border: 1px solid #000 !important;
+                min-height: 60px !important;
+                padding: 5px !important;
+            }
+
+            #remarksText {
+                font-size: 10pt !important;
+                color: black !important;
+            }
+        }
+
+        /* Add Salary Calculations Styles */
+        .salary-calculations {
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .calculations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .calculation-item {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .calculation-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+
+        .calculation-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        @media print {
+            .salary-calculations {
+                background: white !important;
+                border-bottom: 1px solid #000 !important;
+                padding: 10px !important;
+            }
+
+            .calculation-item {
+                background: white !important;
+                border: 1px solid #000 !important;
+                padding: 5px !important;
+            }
+
+            .calculation-label {
+                font-size: 8pt !important;
+            }
+
+            .calculation-value {
+                font-size: 9pt !important;
+            }
+        }
+
+        @media print {
+            /* Employee Print Styles */
+            .employee-print .salary-calculations {
+                display: none !important;
+            }
+
+            .employee-print .overtime-details {
+                display: none !important;
+            }
+
+            .employee-print .overtime-entry {
+                display: block !important;
+                text-align: right !important;
+            }
+
+            .employee-print .overtime-amount {
+                display: inline-block !important;
+                text-align: right !important;
+            }
+
+            /* Admin Print Styles */
+            .admin-print .salary-calculations {
+                display: block !important;
+            }
+
+            .admin-print .overtime-details {
+                display: inline-block !important;
+            }
+
+	  .admin-print #netPay {
+ 		font-size: 18px;
+    		font-weight: bold;
+	    }
+	   .employee-print #netPay {
+ 		font-size: 18px;
+    		font-weight: bold;
+	    }
+
+            .admin-print .overtime-entry {
+                display: flex !important;
+                justify-content: space-between !important;
+            }
+
+            .admin-print .overtime-amount {
+                display: inline-block !important;
+            }
+
+                        /* Deduction details visibility for print */
+            .admin-print .employee-only {
+                display: none !important;
+            }
+
+            .employee-print .employee-only {
+                display: inline-block !important;
+            }
+
+            /* Deduction details layout for print */
+            .admin-print .deduction-details {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: flex-end !important;
+            }
+
+            .employee-print .deduction-details {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+            }
+
+            .employee-print #dailyDeductionDetails,
+            .employee-print #hoursDeductionDetails {
+                display: none !important;
+            }
+
+        /* Screen styles for deduction details */
+        .employee-only {
+            display: none !important;
+        }
+
+        /* Default view shows detailed breakdown */
+        .deduction-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        /* Employee print hides details, shows only totals */
+        .employee-print .deduction-details {
+            flex-direction: row;
+        }
+
+        .employee-print .employee-only {
+            display: inline-block !important;
+        }
+
+        .employee-print #dailyDeductionDetails,
+        .employee-print #hoursDeductionDetails {
+            display: none !important;
+        }
+        }
+
+        /* Two-column layout */
+        .main-content {
+            display: flex !important;
+            width: 100% !important;
+        }
+
+        .left-column {
+            width: 60% !important;
+            border-right: 1px solid #000 !important;
+            padding-right: 10px !important;
+        }
+
+        .right-column {
+            width: 40% !important;
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+        }
+
+        /* Employer contributions section */
+        .employer-contributions {
+            padding: 5px !important;
+            background: white !important;
+        }
+
+        .contributions-grid {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 5px !important;
+        }
+
+        .contribution-item {
+            padding: 2px !important;
+            margin: 0 !important;
+            background: white !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        .contribution-label {
+            font-size: 8pt !important;
+            margin-bottom: 0 !important;
+        }
+
+        .contribution-value {
+            font-size: 8pt !important;
+            text-align: right !important;
+        }
+
+        /* Signature section - vertical layout */
+        .signature-section {
+            background: white !important;
+            border-top: 1px solid #000 !important;
+            padding: 10px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 15px !important;
+        }
+
+        .signature-group {
+            width: 100% !important;
+            margin-bottom: 0 !important;
+        }
+
+        .signature-label {
+            font-size: 8pt !important;
+            margin-bottom: 3px !important;
+            text-align: left !important;
+        }
+
+        .signature-box {
+            border: 1px solid #000 !important;
+            height: 40px !important;
+            width: 100% !important;
+            margin-top: 5px !important;
+        }
+
+        /* Adjust section titles */
+        .section-title {
+            font-size: 9pt !important;
+            margin: 3px 0 5px 0 !important;
+            padding-bottom: 3px !important;
+            border-bottom: 1px solid #000 !important;
+        }
+
+                    /* Ensure right alignment for amounts */
+            .detail-value, 
+            .contribution-value,
+            .total-row span:last-child {
+                text-align: right !important;
+            }
+
+            /* Deduction details styling for print */
+            .admin-print .deduction-details {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: flex-end !important;
+            }
+
+            .admin-print .admin-only {
+                display: block !important;
+                font-size: 7pt !important;
+                color: #666 !important;
+                margin-bottom: 2px !important;
+            }
+
+            .employee-print .admin-only {
+                display: none !important;
+            }
+
+            .employee-print .deduction-details {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+            }
+
+        /* Details section layout - screen only */
+        @media screen {
+            .details-section {
+                display: flex !important;
+                flex-direction: column !important;
+            }
+
+            .earnings, .deductions {
+                width: 100% !important;
+            }
+        }
+
+        /* Print layout remains unchanged */
+        @media print {
+            .details-section {
+                display: grid !important;
+                grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            }
+        }
+        .bank-account {
+    margin-left: -5px !important; /* Move bank account text left */
+}
+.signature-box-stamp {
+    height: 40 !important; /* Adjust height as needed */
+    width: 100px !important;
+    overflow: visible !important; /* Ensure stamp is fully shown */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+        /* Add these styles in the style section */
+        .confirmation-dialog {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .confirmation-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .confirmation-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .confirmation-message {
+            margin-bottom: 20px;
+            color: #666;
+        }
+
+        .confirmation-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn-cancel {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-confirm {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .confirmation-dialog.show {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <div id="sidebar">
+            <div class="sidebar-header">
+                <img src="HwaYeapLogo.jpg" alt="Logo">
+                <h3>Salary System</h3>
+            </div>
+            <ul class="nav flex-column mt-4">
+                <li class="nav-item">
+                    <a class="nav-link" href="main.html">
+                        <i class="fas fa-file-invoice-dollar"></i> <span>Employee Salary Voucher</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="internSalaryVoucher.html" data-page="intern-voucher">
+                        <i class="fas fa-file-invoice-dollar"></i> <span>InternSalary Voucher</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="employeePage.html">
+                        <i class="fas fa-users"></i> <span>Employee Management</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="#">
+                        <i class="fas fa-print"></i> <span>Print-BankIn Slip</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="record.html">
+                        <i class="fas fa-print"></i> <span>Print-Monthly Record</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="setting.html">
+                        <i class="fas fa-cog"></i> <span>Settings</span>
+                    </a>
+                </li>
+                <li class="nav-item mt-4">
+                    <a class="nav-link" href="login.html">
+                        <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div id="content">
+            <button class="toggle-sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <div class="page-header">
+                <h1 class="h3 mb-0">Print BankIn Slip</h1>
+                <p class="mb-0">View saved salary records by month and employee</p>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <label for="viewMonth" class="form-label">Month</label>
+                    <select class="form-select" id="viewMonth">
+                        <option value="January">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="viewYear" class="form-label">Year</label>
+                    <input type="number" class="form-control" id="viewYear" min="2000" max="2100" placeholder="Enter year">
+                </div>
+                <div class="col-md-4">
+                    <label for="viewEmployee" class="form-label">Employee</label>
+                    <select class="form-select" id="viewEmployee">
+                        <option value="">Select Employee</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="salaryVoucher" style="display: none;">
+                <div class="action-buttons mb-3">
+                    <button class="btn btn-success" onclick="saveAsExcel()">
+                        <i class="fas fa-file-excel"></i> Save as Excel
+                    </button>
+                    <button class="btn btn-danger" onclick="printForEmployee()">
+                        <i class="fas fa-file-pdf"></i> Print For Employee
+                    </button>
+                    <button class="btn btn-primary" onclick="printForAdmin()">
+                        <i class="fas fa-print"></i> Print For Admin
+                    </button>
+                    <button class="btn btn-info" onclick="sendPdfByEmail()">
+                        <i class="fas fa-envelope"></i> Send PDF by Email
+                    </button>
+                    <button class="btn btn-danger" onclick="deleteSalaryRecord()">
+                        <i class="fas fa-trash"></i> Delete Record
+                    </button>
+                </div>
+                <div class="voucher-container">
+                    <div class="watermark"></div>
+                    
+                    <div class="voucher-header">
+                        <div class="company-info" style="text-align: center; margin-bottom: 20px;">
+                            <img src="HwaYeapLogo.jpg" alt="Company Logo" style="height: 80px; margin-bottom: 10px;">
+                            <div style="font-size: 14px; line-height: 1.4;">
+                                <div style="font-weight: bold; font-size: 16px;">Hwa Yeap Engineering</div>
+                                <div>52 & 53, Jalan Pontian Maju 2, Taman Perindustrian, Mutiara, 82000 Pontian, Johor Darul Ta'zim</div>
+                            </div>
+                        </div>
+                        <h2>SALARY VOUCHER 薪金传票</h2>
+                    </div>
+                    
+                    <div class="employee-info">
+                        <div class="info-group">
+                            <span class="info-label">PAY TO:</span>
+                            <span class="info-value" id="employeeName">-</span>
+                        </div>
+                        <div class="info-group">
+                            <span class="info-label">I/C NO:</span>
+                            <span class="info-value" id="icNumber">-</span>
+                        </div>
+                        <div class="info-group">
+                            <span class="info-label">BANK ACC:</span>
+                            <span class="info-value" id="bankAccount">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Add Salary Calculations Section -->
+                    <div class="salary-calculations">
+                        <h3 class="section-title">Salary Calculations</h3>
+                        <div class="calculations-grid">
+                            <div class="calculation-item">
+                                <div class="calculation-label">Daily Salary</div>
+                                <div class="calculation-value" id="dailySalary">RM 0.00</div>
+                            </div>
+                            <div class="calculation-item">
+                                <div class="calculation-label">Hourly Salary</div>
+                                <div class="calculation-value" id="hourlySalary">RM 0.00</div>
+                            </div>
+                            <div class="calculation-item">
+                                <div class="calculation-label">OT-1.5 Rate</div>
+                                <div class="calculation-value" id="ot1_5">RM 0.00</div>
+                            </div>
+                            <div class="calculation-item">
+                                <div class="calculation-label">OT-2.0 Rate</div>
+                                <div class="calculation-value" id="ot2_0">RM 0.00</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="main-content">
+                        <div class="left-column">
+                            <div class="details-section">
+                                <div class="earnings">
+                                    <h3 class="section-title">Earnings</h3>
+                                    
+                                   <div class="detail-row">
+                                        <span class="detail-label" id="payLabel">BASIC PAY 基本支付 epf</span>
+                                        <span class="detail-value" id="basicPay">RM 0.00</span>
+                                    </div>
+                                    
+                                    <div class="detail-row">
+                                        <span class="detail-label">OVERTIME 超时</span>
+                                        <div id="overtimeList"></div>
+                                    </div>
+                                    
+                                    <div class="detail-row">
+                                        <span class="detail-label">TRAVEL ALLOWANCES 津贴</span>
+                                        <span class="detail-value" id="allowances">RM 0.00</span>
+                                    </div>
+                                    
+                                    <div class="total-row gross-total">
+                                        <span>(A) GROSS PAY 总付额</span>
+                                        <span id="grossPay">RM 0.00</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="deductions">
+                                    <h3 class="section-title">Deductions</h3>
+                                    
+                                    <div class="detail-row">
+                                        <span class="detail-label">EPF - EMPLOYEE 雇员公积金</span>
+                                        <span class="detail-value" id="epfEmployee">RM 0.00</span>
+                                    </div>
+                                    
+                                    <div class="detail-row">
+                                        <span class="detail-label">SOCSO 社会保险金</span>
+                                        <span class="detail-value" id="socso">RM 0.00</span>
+                                    </div>
+                                    
+                                    <div class="detail-row">
+                                        <span class="detail-label">EIS 就业保险金</span>
+                                        <span class="detail-value" id="eis">RM 0.00</span>
+                                    </div>
+                                    
+                                    <div class="detail-row">
+                                        <span class="detail-label">INCOME TAX (PCB) 所得税</span>
+                                        <span class="detail-value" id="pcb">RM 0.00</span>
+                                    </div>
+                                    
+                                    <div class="detail-row">
+                                        <span class="detail-label">ADVANCE / LOAN 预支/贷款</span>
+                                        <span class="detail-value" id="advanceLoanType" style="margin-left: 10px;">-</span>
+                                        <span class="detail-value" id="advanceLoan">RM 0.00</span>
+                                       
+                                    </div>
+                                    
+                                    <div class="detail-row">
+                                        <span class="detail-label">DAILY DEDUCTION 每日扣除</span>
+                                        <div class="deduction-details">
+                                            <span class="detail-value" id="dailyDeductionDetails">-</span>
+                                            <span class="detail-value employee-only" id="dailyDeduction" style="display: none;">RM 0.00</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="detail-row">
+                                        <span class="detail-label">HOURS DEDUCTION 小时扣除</span>
+                                        <div class="deduction-details">
+                                            <span class="detail-value" id="hoursDeductionDetails">-</span>
+                                            <span class="detail-value employee-only" id="hoursDeduction" style="display: none;">RM 0.00</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="detail-row">
+                                        <span class="detail-label">ALLOWANCE DEDUCTIONS</span>
+                                        <span class="detail-value" id="allowanceDeductions">RM 0.00</span>
+                                    </div>
+                                    
+                                    <div class="total-row deductions-total">
+                                        <span>(B) TOTAL DEDUCTIONS 总扣除额</span>
+                                        <span id="totalDeductions">RM 0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="additions-section">
+                                <h3 class="section-title">附加 ADDITIONS</h3>
+                                <div id="additionsList"></div>
+                                <div class="total-row">
+                                    <span>(C) TOTAL ADDITIONS 总附加额</span>
+                                    <span id="totalAdditions">RM 0.00</span>
+                                </div>
+                            </div>
+                            
+                            <div class="net-pay">
+                                <div class="net-pay-row">
+                                    <span>NET PAY (A-B+C) 净付额</span>
+                                    <span id="netPay">RM 0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="right-column">
+                            <div class="employer-contributions">
+                                <h3 class="section-title">Employer Contributions</h3>
+                                
+                                <div class="contributions-grid">
+                                    <div class="contribution-item">
+                                        <div class="contribution-label" >EMPLOYER'S EPF 雇主公积金</div>
+                                        <div class="contribution-value" id="employerEpf" >RM 0.00</div>
+                                    </div>
+                                    
+                                    <div class="contribution-item">
+                                        <div class="contribution-label">EMPLOYER'S SOCSO 社会保险金</div>
+                                        <div class="contribution-value" id="employerSocso">RM 0.00</div>
+                                    </div>
+                                    
+                                    <div class="contribution-item">
+                                        <div class="contribution-label">EMPLOYER'S EIS 就业保险金</div>
+                                        <div class="contribution-value" id="employerEis">RM 0.00</div>
+                                    </div>
+                                    
+                                    <div class="contribution-item">
+                                        <div class="contribution-label">TOTAL CONTRIBUTION 总补贴</div>
+                                        <div class="contribution-value" id="totalEmployerContribution">RM 0.00</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                          
+                            
+                            <div class="signature-section">
+                                <div class="signature-group">
+                                    <div class="signature-label">APPROVED BY 批准者</div>
+                                    <div class="signature-box">Chong</div>
+                                </div>
+                                
+                                <div class="signature-group">
+                                    <div class="signature-label">EMPLOYEES SIGNATURE 雇员签名</div>
+                                    <div class="signature-box" id="employeeSignature">Signature / Date</div>
+                                </div>
+                                
+                                <div class="signature-group">
+                                    <div class="signature-label">Company Stamp</div>
+                                    <div class="signature-box">
+                                        <img src="hwaYeapStamp.png" alt="Company Stamp" 
+                                             style="width: 20%; height: auto; object-fit: contain;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                       
+                    </div>
+                    
+                </div>
+                  <!-- Add Remarks Section -->
+                  <div class="remarks-section" style="margin-top: 15px; padding: 15px; background-color: #f8f9fa; border: 1px solid #dee2e6; margin-bottom: 15px;">
+                    <h3 class="section-title">Remarks 备注</h3>
+                    <!-- <div class="remarks-content" style="min-height: 60px; padding: 10px; background-color: white; border: 1px solid #dee2e6;"> -->
+                        <div id="remarksText" style="white-space: pre-wrap;">-</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- <footer>
+                <p>Salary Management System &copy; 2025 - This is a computer-generated document</p>
+            </footer> -->
+        </div>
+    </div>
+
+    <div class="confirmation-dialog" id="confirmationDialog">
+        <div class="confirmation-content">
+            <div class="confirmation-title" id="confirmationTitle">Confirm Action</div>
+            <div class="confirmation-message" id="confirmationMessage"></div>
+            <div class="confirmation-buttons">
+                <button class="btn btn-secondary btn-cancel" onclick="hideConfirmationDialog()">Cancel</button>
+                <button class="btn btn-danger btn-confirm" id="confirmButton">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Add Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+        import { getDatabase, ref, get, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAEdrpzI8RsyuN7LrlGvWVF6FaMmfIcADU",
+            authDomain: "hwayeap-1db99.firebaseapp.com",
+            databaseURL: "https://hwayeap-1db99-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "hwayeap-1db99",
+            storageBucket: "hwayeap-1db99.firebasestorage.app",
+            messagingSenderId: "393592107948",
+            appId: "1:393592107948:web:fa2031eb8f5f0cf4b04009",
+            measurementId: "G-35S9W4P3TS"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const database = getDatabase(app);
+
+        // Make Firebase functions available globally
+        window.database = database;
+        window.ref = ref;
+        window.get = get;
+        window.onValue = onValue;
+        window.set = set;
+    </script>
+    <script>
+        // 1. Get references to the elements
+  
+        // Toggle sidebar
+        document.querySelector('.toggle-sidebar').addEventListener('click', function() {
+            document.body.classList.toggle('sidebar-collapsed');
+            
+            // Save state to localStorage
+            if (document.body.classList.contains('sidebar-collapsed')) {
+                localStorage.setItem('sidebarState', 'collapsed');
+            } else {
+                localStorage.setItem('sidebarState', 'expanded');
+            }
+        });
+        
+        // Check localStorage for sidebar state
+        if (localStorage.getItem('sidebarState') === 'collapsed') {
+            document.body.classList.add('sidebar-collapsed');
+        }
+
+                // Function to populate employee dropdown based on SALARY RECORDS
+        async function updateEmployeeList() {
+            const year = document.getElementById('viewYear').value;
+            const month = document.getElementById('viewMonth').value;
+            const employeeSelect = document.getElementById('viewEmployee');
+            
+            // 1. Clear the current list
+            employeeSelect.innerHTML = '<option value="">Select Employee</option>';
+
+            if (!year || !month) return;
+
+            // 2. Point to the specific Salary Month record instead of the Employee list
+            const salaryRef = ref(database, `Salary/${year}/${month}`);
+            
+            try {
+                const snapshot = await get(salaryRef);
+                
+                if (snapshot.exists()) {
+                    // 3. Loop through the keys (which are Employee Names) found in that month
+                    snapshot.forEach((childSnapshot) => {
+                        const employeeName = childSnapshot.key;
+                        const option = document.createElement('option');
+                        option.value = employeeName;
+                        option.textContent = employeeName;
+                        employeeSelect.appendChild(option);
+                    });
+                } else {
+                    // Optional: Add a placeholder if no records exist
+                    const option = document.createElement('option');
+                    option.text = "(No records found for this month)";
+                    option.disabled = true;
+                    employeeSelect.appendChild(option);
+                }
+            } catch (error) {
+                console.error("Error updating list:", error);
+            }
+        }
+        // Set current month and year in the selectors
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set default date
+            const currentDate = new Date();
+            currentDate.setMonth(currentDate.getMonth() - 1); // Default to previous month
+            
+            document.getElementById('viewMonth').value = currentDate.toLocaleString('default', { month: 'long' });
+            document.getElementById('viewYear').value = currentDate.getFullYear();
+
+            // Initial load of the list
+            updateEmployeeList();
+
+            // Add listeners to refresh list when date changes
+            document.getElementById('viewMonth').addEventListener('change', updateEmployeeList);
+            document.getElementById('viewYear').addEventListener('change', updateEmployeeList);
+            // Also update on 'input' for the year field so it updates while typing
+            document.getElementById('viewYear').addEventListener('input', updateEmployeeList);
+        });
+
+        // Load salary data when selections change
+        function loadSalaryData() {
+            const month = document.getElementById('viewMonth').value;
+            const year = document.getElementById('viewYear').value;
+            const employee = document.getElementById('viewEmployee').value;
+
+            // Validate year
+            if (!year || year < 2000 || year > 2100) {
+                alert('Please enter a valid year between 2000 and 2100');
+                return;
+            }
+
+            if (!employee) {
+                document.getElementById('salaryVoucher').style.display = 'none';
+                return;
+            }
+
+            // 1. First, fetch the Employee profile to check the position
+            const empRef = ref(database, `Employee/${employee}`);
+            get(empRef).then((empSnapshot) => {
+                let isIntern = false;
+                if (empSnapshot.exists()) {
+                    const employeeData = empSnapshot.val();
+                    // Check if the position is Intern
+                    isIntern = (employeeData.position === 'Intern');
+                }
+
+                // 2. Now fetch the Salary record
+                const salaryRef = ref(database, `Salary/${year}/${month}/${employee}`);
+                return get(salaryRef).then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const salaryData = snapshot.val();
+                        
+                        // 3. Update the label and value based on the position
+                        const payLabel = document.getElementById('payLabel');
+                        const basicPayDisplay = document.getElementById('basicPay');
+
+                        if (isIntern) {
+                            payLabel.textContent = 'ALLOWANCE 津贴';
+                            // Check if stored as allowance or basicPay
+                            const amount = salaryData.basicPay || 0;
+                            basicPayDisplay.textContent = `RM ${amount}`;
+                        } else {
+                            payLabel.textContent = 'BASIC PAY 基本支付 epf';
+                            basicPayDisplay.textContent = `RM ${salaryData.basicPay || 0}`;
+                        }
+
+                        // Call your existing display function for the rest of the data
+                        displaySalaryData(salaryData, employee, month, year);
+                        document.getElementById('salaryVoucher').style.display = 'block';
+                    } else {
+                        alert('No salary record found for the selected period');
+                        document.getElementById('salaryVoucher').style.display = 'none';
+                    }
+                });
+            }).catch((error) => {
+                console.error("Error loading data: ", error);
+                alert("Error loading data. Please try again.");
+            });
+        }
+
+        // Display salary data
+        function displaySalaryData(data, employee, month, year) {
+            try {
+                // Update header information
+                const salaryPeriod = document.getElementById('salaryPeriod');
+                if (salaryPeriod) {
+                    salaryPeriod.textContent = `Salary For ${month} ${year}`;
+                }
+
+                // Check if employee is an intern
+                const employeeInfoRef = ref(database, `Employee/${employee}`);
+                get(employeeInfoRef).then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const employeeData = snapshot.val();
+                        const isIntern = employeeData.position === 'Intern';
+                        
+                        // Update voucher title based on employee type
+                        const voucherTitle = document.querySelector('.voucher-header h2');
+                        if (voucherTitle) {
+                            if (isIntern) {
+                                voucherTitle.textContent = `${month.toUpperCase()} SALARY OF INTERNSHIP VOUCHER 实习生薪金传票`;
+                            } else {
+                                voucherTitle.textContent = `${month.toUpperCase()} SALARY VOUCHER 薪金传票`;
+                            }
+                        }
+                    }
+                });
+                
+                // Update employee information
+                const employeeName = document.getElementById('employeeName');
+                if (employeeName) {
+                    employeeName.textContent = employee;
+                }
+                
+                // Update earnings
+                const basicPay = document.getElementById('basicPay');
+                if (basicPay) {
+                    basicPay.textContent = `RM ${(data.basicPay || 0).toFixed(2)}`;
+                }
+                
+                const allowances = document.getElementById('allowances');
+                if (allowances) {
+                    allowances.textContent = `RM ${(data.allowances || 0).toFixed(2)}`;
+                }
+                
+                // Display overtime entries
+                const overtimeList = document.getElementById('overtimeList');
+                if (overtimeList) {
+                    overtimeList.innerHTML = '';
+                    if (data.overtime && data.overtime.length > 0) {
+                        data.overtime.forEach(entry => {
+                            const row = document.createElement('div');
+                            row.className = 'detail-row overtime-entry';
+                            row.innerHTML = `
+                                <span class="detail-label overtime-details">${entry.hours}hrs × ${entry.multiplier}=</span>
+                                <span class="detail-value overtime-amount">RM ${parseFloat(entry.amount).toFixed(2)}</span>
+                            `;
+                            overtimeList.appendChild(row);
+                        });
+                    }
+                }
+                
+                // Update totals
+                const grossPayAmount = document.getElementById('grossPayAmount');
+                if (grossPayAmount) {
+                    grossPayAmount.textContent = `RM ${(data.grossPay || 0).toFixed(2)}`;
+                }
+
+                const grossPay = document.getElementById('grossPay');
+                if (grossPay) {
+                    grossPay.textContent = `RM ${(data.grossPay || 0).toFixed(2)}`;
+                }
+                
+                const totalDeductions = document.getElementById('totalDeductions');
+                if (totalDeductions) {
+                    totalDeductions.textContent = `RM ${(data.deductions?.totalDeductions || 0).toFixed(2)}`;
+                }
+                
+                const totalAdditions = document.getElementById('totalAdditions');
+                if (totalAdditions) {
+                    totalAdditions.textContent = `RM ${(data.totalAdditions || 0).toFixed(2)}`;
+                }
+                
+                const netPayAmount = document.getElementById('netPayAmount');
+                if (netPayAmount) {
+                    netPayAmount.textContent = `RM ${(data.netPay || 0).toFixed(2)}`;
+                }
+
+                const netPay = document.getElementById('netPay');
+                if (netPay) {
+                    netPay.textContent = `RM ${(data.netPay || 0).toFixed(2)}`;
+                }
+                
+                // Display deductions
+                const deductions = data.deductions || {};
+                
+                // Check employee position to determine field names
+                const employeeRef = ref(database, `Employee/${employee}`);
+                get(employeeRef).then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const employeeData = snapshot.val();
+                        const isIntern = employeeData.position === 'Intern';
+                        
+                        let dailyDeductionAmount, hoursDeductionAmount;
+                        
+                        if (isIntern) {
+                            // Intern data structure
+                            dailyDeductionAmount = deductions.dailyDeduction || 0;
+                            hoursDeductionAmount = deductions.hoursDeduction || 0;
+                        } else {
+                            // Employee data structure
+                            dailyDeductionAmount = deductions.dailyDeductionTotal || 0;
+                            hoursDeductionAmount = deductions.hoursDeductionTotal || 0;
+                        }
+                        
+                        const deductionFields = {
+                            'epfEmployee': deductions.epfEmployee,
+                            'socso': deductions.socso,
+                            'eis': deductions.eis,
+                            'pcb': deductions.pcb,
+                            'advanceLoan': deductions.advanceLoan,
+                            'advanceLoanType': deductions.advanceLoanType || '-',
+                            'dailyDeduction': dailyDeductionAmount,
+                            'hoursDeduction': hoursDeductionAmount,
+                            'allowanceDeductions': deductions.allowanceDeductions
+                        };
+                        
+                        // Update deduction fields
+                        for (const [id, value] of Object.entries(deductionFields)) {
+                            const element = document.getElementById(id);
+                            if (element) {
+                                if (id === 'advanceLoanType') {
+                                    element.textContent = value;
+                                } else {
+                                    element.textContent = `RM ${(value || 0).toFixed(2)}`;
+                                }
+                            }
+                        }
+                    }
+                }).catch(() => {
+                    // Fallback to employee structure if error
+                    const deductionFields = {
+                        'epfEmployee': deductions.epfEmployee,
+                        'socso': deductions.socso,
+                        'eis': deductions.eis,
+                        'pcb': deductions.pcb,
+                        'advanceLoan': deductions.advanceLoan,
+                        'advanceLoanType': deductions.advanceLoanType || '-',
+                        'dailyDeduction': deductions.dailyDeductionTotal || 0,
+                        'hoursDeduction': deductions.hoursDeductionTotal || 0,
+                        'allowanceDeductions': deductions.allowanceDeductions
+                    };
+                    
+                    // Update deduction fields
+                    for (const [id, value] of Object.entries(deductionFields)) {
+                        const element = document.getElementById(id);
+                        if (element) {
+                            if (id === 'advanceLoanType') {
+                                element.textContent = value;
+                            } else {
+                                element.textContent = `RM ${(value || 0).toFixed(2)}`;
+                            }
+                        }
+                    }
+                });
+
+                // Update deduction details for view slip format
+                const dailyDeductionDetails = document.getElementById('dailyDeductionDetails');
+                const hoursDeductionDetails = document.getElementById('hoursDeductionDetails');
+                
+                if (dailyDeductionDetails || hoursDeductionDetails) {
+                    // Get employee position from database
+                    const employeeRef2 = ref(database, `Employee/${employee}`);
+                    get(employeeRef2).then((snapshot) => {
+                        if (snapshot.exists()) {
+                            const employeeData = snapshot.val();
+                            const isIntern = employeeData.position === 'Intern';
+                            
+                            // Update daily deduction details
+                            if (dailyDeductionDetails) {
+                                let deductionDays, dailyDeductionAmount;
+                                
+                                if (isIntern) {
+                                    // Intern data structure
+                                    deductionDays = deductions.deductionDays || 0;
+                                    dailyDeductionAmount = deductions.dailyDeduction || 0;
+                                } else {
+                                    // Employee data structure
+                                    deductionDays = deductions.dailyDeductionDays || 0;
+                                    dailyDeductionAmount = deductions.dailyDeductionTotal || 0;
+                                }
+                                
+                                if (deductionDays > 0) {
+                                    const dailyRate = data.salaryCalculations?.dailySalary || 0;
+                                    dailyDeductionDetails.textContent = `${deductionDays} days × RM ${dailyRate.toFixed(2)} = RM ${dailyDeductionAmount.toFixed(2)}`;
+                                } else {
+                                    dailyDeductionDetails.textContent = 'RM 0.00';
+                                }
+                            }
+                            
+                            // Update hours deduction details
+                            if (hoursDeductionDetails) {
+                                let deductionHours, hoursDeductionAmount;
+                                
+                                if (isIntern) {
+                                    // Intern data structure
+                                    deductionHours = deductions.deductionHours || 0;
+                                    hoursDeductionAmount = deductions.hoursDeduction || 0;
+                                } else {
+                                    // Employee data structure
+                                    deductionHours = deductions.hoursDeductionHours || 0;
+                                    hoursDeductionAmount = deductions.hoursDeductionTotal || 0;
+                                }
+                                
+                                if (deductionHours > 0) {
+                                    const hourlyRate = data.salaryCalculations?.hourlySalary || 0;
+                                    hoursDeductionDetails.textContent = `${deductionHours} hours × RM ${hourlyRate.toFixed(2)} = RM ${hoursDeductionAmount.toFixed(2)}`;
+                                } else {
+                                    hoursDeductionDetails.textContent = 'RM 0.00';
+                                }
+                            }
+                        }
+                    }).catch(() => {
+                        // Fallback to employee structure if error
+                        if (dailyDeductionDetails) {
+                            const deductionDays = deductions.dailyDeductionDays || 0;
+                            const dailyDeductionAmount = deductions.dailyDeductionTotal || 0;
+                            if (deductionDays > 0) {
+                                const dailyRate = data.salaryCalculations?.dailySalary || 0;
+                                dailyDeductionDetails.textContent = `${deductionDays} days × RM ${dailyRate.toFixed(2)} = RM ${dailyDeductionAmount.toFixed(2)}`;
+                            } else {
+                                dailyDeductionDetails.textContent = 'RM 0.00';
+                            }
+                        }
+                        
+                        if (hoursDeductionDetails) {
+                            const deductionHours = deductions.hoursDeductionHours || 0;
+                            const hoursDeductionAmount = deductions.hoursDeductionTotal || 0;
+                            if (deductionHours > 0) {
+                                const hourlyRate = data.salaryCalculations?.hourlySalary || 0;
+                                hoursDeductionDetails.textContent = `${deductionHours} hours × RM ${hourlyRate.toFixed(2)} = RM ${hoursDeductionAmount.toFixed(2)}`;
+                            } else {
+                                hoursDeductionDetails.textContent = 'RM 0.00';
+                            }
+                        }
+                    });
+                }
+                
+
+                
+                // Display additions
+                const additionsList = document.getElementById('additionsList');
+                if (additionsList) {
+                    additionsList.innerHTML = '';
+                    if (data.additions && data.additions.length > 0) {
+                        data.additions.forEach(addition => {
+                            const row = document.createElement('div');
+                            row.className = 'detail-row';
+                            row.innerHTML = `
+                                <span class="detail-label">${addition.name}</span>
+                                <span class="detail-value">RM ${parseFloat(addition.amount).toFixed(2)}</span>
+                            `;
+                            additionsList.appendChild(row);
+                        });
+                    }
+                }
+                
+                // Display employer contributions
+                const employerContributions = data.employerContributions || {};
+                const contributionFields = {
+                    'employerEpf': employerContributions.epf,
+                    'employerSocso': employerContributions.socso,
+                    'employerEis': employerContributions.eis,
+                    'totalEmployerContribution': employerContributions.total
+                };
+                
+                for (const [id, value] of Object.entries(contributionFields)) {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = `RM ${(value || 0).toFixed(2)}`;
+                    }
+                }
+
+                // Display remarks from database
+                const remarksText = document.getElementById('remarksText');
+                if (remarksText) {
+                    remarksText.textContent = data.remarks || '-';
+                }
+
+                // Load employee details
+                const employeeRef3 = ref(database, `Employee/${employee}`);
+                get(employeeRef3).then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const employeeData = snapshot.val();
+                        const icNumber = document.getElementById('icNumber');
+                        if (icNumber) {
+                            icNumber.textContent = employeeData.icNumber || '-';
+                        }
+                        
+                        const bankAccount = document.getElementById('bankAccount');
+                        if (bankAccount) {
+                            bankAccount.textContent = employeeData.bankAccount || '-';
+                        }
+                        
+                        const employeeSignature = document.getElementById('employeeSignature');
+                        if (employeeSignature) {
+                            employeeSignature.textContent = employeeData.bankAccount || '-';
+                        }
+                    }
+                }).catch(error => {
+                    console.error("Error loading employee details:", error);
+                });
+                
+                // Display salary calculations
+                const salaryCalculations = data.salaryCalculations || {};
+                const calculationFields = {
+                    'dailySalary': salaryCalculations.dailySalary,
+                    'hourlySalary': salaryCalculations.hourlySalary,
+                    'ot1_5': salaryCalculations.ot1_5Rate,
+                    'ot2_0': salaryCalculations.ot2_0Rate
+                };
+
+                for (const [id, value] of Object.entries(calculationFields)) {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = `RM ${(value || 0).toFixed(2)}`;
+                    }
+                }
+            } catch (error) {
+                console.error("Error in displaySalaryData:", error);
+                alert("Error displaying salary data. Please try again.");
+            }
+        }
+
+        // Add event listeners for selectors
+        document.getElementById('viewMonth').addEventListener('change', loadSalaryData);
+        document.getElementById('viewYear').addEventListener('change', loadSalaryData);
+        document.getElementById('viewEmployee').addEventListener('change', loadSalaryData);
+
+        function saveAsExcel() {
+    try {
+        const month = document.getElementById('viewMonth').value;
+        const year = document.getElementById('viewYear').value;
+        const employee = document.getElementById('viewEmployee').value;
+        
+        // Get additional employee details
+        const ic = document.getElementById('icNumber')?.textContent || 'N/A';
+        const bankAccount = document.getElementById('bankAccount')?.textContent || 'N/A';
+        const companyName = "Hwa Yeap Engineering";
+        const companyAddress = "52 & 53, Jalan Pontian Maju 2, Taman Perindustrian, Mutiara,\nPontian, Johor Darul Ta'zim, 82000";
+        
+        // Create workbook
+        const wb = XLSX.utils.book_new();
+        
+        // Get overtime entries safely
+        const overtimeList = document.getElementById('overtimeList');
+        const overtimeEntries = [];
+        if (overtimeList) {
+            Array.from(overtimeList.children).forEach(row => {
+                if (row.textContent) {
+                    const [hours, amount] = row.textContent.split('RM');
+                    overtimeEntries.push([`Overtime (${hours.trim()})`, `RM${amount.trim()}`]);
+                }
+            });
+        }
+        
+        // Calculate overtime offset for row references
+        const overtimeOffset = overtimeEntries.length;
+        
+        // Helper function to safely get text content
+        const getTextContent = (id) => {
+            const element = document.getElementById(id);
+            return element ? element.textContent : 'RM 0.00';
+        };
+        
+        // Prepare data for Excel
+        const data = [
+            // Company Header
+            [companyName, '', '', '', ''],
+            [companyAddress, '', '', '', ''],
+            [], // Empty row
+            // Title Row
+            ['SALARY VOUCHER', '', '', '', ''],
+            
+            // Employee Details
+            ['Employee:', employee, '', 'IC No.:', ic],
+            ['Period:', `${month} ${year}`, '', 'Bank Account:', bankAccount],
+            ['', '', '', '', ''],  // Empty row
+            
+            // Column Headers
+            ['Earnings', 'Amount', '', 'Employer Contributions', 'Amount'],
+            ['Basic Pay', getTextContent('basicPay'), '', 'EPF', getTextContent('employerEpf')],
+            ['Allowances', getTextContent('allowances'), '', 'SOCSO', getTextContent('employerSocso')],
+            ['Overtime Earnings', '', '', 'EIS', getTextContent('employerEis')],
+        ];
+        
+        // Add overtime entries
+        overtimeEntries.forEach(entry => {
+            data.push([entry[0], entry[1], '', '', '']);
+        });
+        
+        // Continue with data
+        data.push(
+            ['', '', '', '', ''],
+            ['Gross Pay', getTextContent('grossPay'), '', 'Total Contribution', getTextContent('totalEmployerContribution')],
+            ['', '', '', '', ''],
+            ['Deductions', 'Amount', '', '', ''],
+            ['EPF Employee', getTextContent('epfEmployee'), '', '', ''],
+            ['SOCSO', getTextContent('socso'), '', '', ''],
+            ['EIS', getTextContent('eis'), '', '', ''],
+            ['PCB', getTextContent('pcb'), '', '', ''],
+            ['Advance/Loan', getTextContent('advanceLoan'), '', '', ''],
+            ['Daily Deduction', getTextContent('dailyDeduction'), '', '', ''],
+            ['Daily Deduction Details', getTextContent('dailyDeductionDetails'), '', '', ''],
+            ['Hours Deduction', getTextContent('hoursDeduction'), '', '', ''],
+            ['Hours Deduction Details', getTextContent('hoursDeductionDetails'), '', '', ''],
+            ['Allowance Deductions', getTextContent('allowanceDeductions'), '', '', ''],
+            ['Total Deductions', getTextContent('totalDeductions'), '', '', ''],
+            ['', '', '', '', ''],
+            ['Additions', 'Amount', '', '', ''],
+            ['Total Additions', getTextContent('totalAdditions'), '', '', ''],
+            ['', '', '', '', ''],
+            ['Net Pay', getTextContent('netPay'), '', '', ''],
+            ['', '', '', '', ''],
+            ['Remarks:', '', '', '', ''],
+            [ getTextContent('remarksText'), '', '', '', '']  // Empty row for remarks
+        );
+        
+        // Create worksheet
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        
+        // ===== TABLE FORMATTING =====
+        // Set merge ranges using overtimeOffset
+        ws['!merges'] = [
+            // Company Header
+            {s: {r:0, c:0}, e: {r:0, c:4}},
+            {s: {r:1, c:0}, e: {r:1, c:4}},
+            // Title
+            {s: {r:3, c:0}, e: {r:3, c:4}},
+            // Section headers
+            {s: {r:7, c:0}, e: {r:7, c:1}},
+            {s: {r:7, c:3}, e: {r:7, c:4}},
+            {s: {r:11 + overtimeOffset, c:0}, e: {r:11 + overtimeOffset, c:1}},
+            {s: {r:24 + overtimeOffset, c:0}, e: {r:24 + overtimeOffset, c:1}},
+            {s: {r:26 + overtimeOffset, c:0}, e: {r:26 + overtimeOffset, c:4}},
+            // Important value cells
+            {s: {r:8, c:1}, e: {r:8, c:1}},
+            {s: {r:9, c:1}, e: {r:9, c:1}},
+            {s: {r:12 + overtimeOffset, c:1}, e: {r:12 + overtimeOffset, c:1}}
+        ];
+        
+        // Set column widths
+        ws['!cols'] = [
+            {wch: 30},  // Left description
+            {wch: 15},  // Left amount
+            {wch: 5},   // Spacer
+            {wch: 30},  // Right description
+            {wch: 15}   // Right amount
+        ];
+        
+        // ===== ADD LOGO/COMPANY HEADER =====
+        const logoHTML = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office"
+              xmlns:x="urn:schemas-microsoft-com:office:excel"
+              xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+        <meta charset="UTF-8">
+        <!--[if gte mso 9]>
+        <xml>
+            <o:DocumentProperties>
+                <o:Company>${companyName}</o:Company>
+            </o:DocumentProperties>
+            <x:ExcelWorkbook>
+                <x:Worksheets>
+                    <x:Worksheet>
+                        <x:Name>Salary Voucher</x:Name>
+                        <x:WorksheetOptions>
+                            <x:DisplayGridlines/>
+                        </x:WorksheetOptions>
+                    </x:Worksheet>
+                </x:Worksheets>
+            </x:ExcelWorkbook>
+        </xml>
+        <![endif]-->
+        </head>
+        <body>
+            <table>
+                 <tr>
+            <td colspan="5" style="text-align:center;">
+                <img src="C:/Users/ongch/Desktop/V15/HWAYEAP/public/HwaYeapLogo.jpg" alt="Company Logo" width="150" height="80">
+            </td>
+              </tr>
+                <tr><td colspan="5" style="text-align:center;font-weight:bold;font-size:16pt">
+                    ${companyName}
+                </td></tr>
+                <tr><td colspan="5" style="text-align:center">
+                    ${companyAddress.replace(/\n/g, '<br>')}
+                </td></tr>
+                <tr><td colspan="5" style="height:20px"></td></tr>
+            </table>
+        </body>
+        </html>
+        `;
+        
+        // Safely initialize and set HTML property
+        wb.props = wb.props || {};
+        wb.props.HTML = logoHTML;
+        
+        // Add worksheet to workbook
+        XLSX.utils.book_append_sheet(wb, ws, 'Salary Voucher');
+        
+        // Save file with error handling
+        XLSX.writeFile(wb, `Salary_Voucher_${employee}_${month}_${year}.xlsx`);
+        
+    } catch (error) {
+        console.error("Error generating Excel file:", error);
+        alert("Failed to generate Excel file. Please check console for details.");
+    }
+}
+        function printForEmployee() {
+            // Add employee print class to body
+            document.body.classList.add('employee-print');
+            // Remove admin print class if it exists
+            document.body.classList.remove('admin-print');
+            
+            // Get employee name and period
+            const employee = document.getElementById('viewEmployee').value;
+            const month = document.getElementById('viewMonth').value;
+            
+            // Set the document title for printing
+            document.title = `${month}_SalaryVoucher_${employee}`;
+            
+            // Print
+            window.print();
+            
+            // Remove the class after printing
+            setTimeout(() => {
+                document.title = "Print BankIn Slip"; // Restore the original title
+                document.body.classList.remove('employee-print');
+            }, 1000);
+        }
+
+        function printForAdmin() {
+            // Get employee name and period
+            const employee = document.getElementById('viewEmployee').value;
+            const month = document.getElementById('viewMonth').value;
+            
+            // Set the document title for printing
+            document.title = `${month}_SalaryVoucher_${employee}`;
+            
+            document.body.classList.add('admin-print');
+            document.body.classList.remove('employee-print');
+            
+            window.print();
+            
+            setTimeout(() => {
+                document.title = "Print BankIn Slip"; // Restore the original title
+                document.body.classList.remove('admin-print');
+            }, 1000);
+        }
+
+        // Function to send PDF by email
+        async function sendPdfByEmail() {
+            const employee = document.getElementById('viewEmployee').value;
+            const month = document.getElementById('viewMonth').value;
+            const year = document.getElementById('viewYear').value;
+
+            if (!employee || !month || !year) {
+                alert('Please select employee, month, and year first');
+                return;
+            }
+
+            // Ask for confirmation
+            if (!confirm("Send Email by PDF?")) {
+                return;
+            }
+
+            // Create loading indicator
+            const loadingDiv = createLoadingDiv();
+            document.body.appendChild(loadingDiv);
+
+            try {
+                // Get employee details
+                const employeeRef = ref(database, `Employee/${employee}`);
+                const snapshot = await get(employeeRef);
+                
+                if (!snapshot.exists()) {
+                    throw new Error('Employee data not found');
+                }
+
+                const employeeData = snapshot.val();
+                const email = employeeData.email;
+                const fullName = employeeData.fullName || employee;
+
+                if (!email || email.trim() === '') {
+                    throw new Error('No valid email address found for this employee');
+                }
+
+                // Validate email format
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    throw new Error('Invalid email address format for this employee');
+                }
+
+                // Set print mode to employee version
+                document.body.classList.remove('admin-print');
+                document.body.classList.add('employee-print');
+
+                // Apply print styles temporarily
+                const style = document.createElement('style');
+                style.id = 'temp-print-style';
+                style.textContent = `
+                    @media screen {
+                        /* Hide non-printable elements */
+                        .toggle-sidebar,
+                        .salary-period-selector,
+                        .action-buttons,
+                        #sidebar,
+                        .btn-group,
+                        .save-section,
+                        .salary-period,
+                        .page-header,
+                        .row.mb-4 {
+                            display: none !important;
+                        }
+
+                        /* Main container styling */
+                        .voucher-container {
+                            margin: 0 !important;
+                            padding: 0 !important;
+                            box-shadow: none !important;
+                            border: 1px solid #000 !important;
+                            background: white !important;
+                        }
+
+                        /* Header styling */
+                        .voucher-header {
+                            background: white !important;
+                            border-bottom: 2px solid #000 !important;
+                            padding: 20px !important;
+                        }
+
+                        /* Employee info styling */
+                        .employee-info {
+                            display: flex !important;
+                            justify-content: space-between !important;
+                            padding: 3px 5px !important;
+                            background: white !important;
+                            border-bottom: 1px solid #000 !important;
+                        }
+
+                        .info-group {
+                            display: inline-block !important;
+                            white-space: nowrap !important;
+                            font-size: 8pt !important;
+                        }
+                      .info-label, .info-value {
+                            display: inline !important;
+                            font-size: 8pt !important;
+                        }
+
+                        /* Remove any spacing between label and value */
+                        .info-label + .info-value {
+                            margin-left: 2px !important;
+                        }
+
+                        /* Two-column layout */
+                        .main-content {
+                            display: flex !important;
+                            width: 100% !important;
+                        }
+
+                        .left-column {
+                            width: 55% !important;
+                            border-right: 1px solid #000 !important;
+                            padding-right: 5px !important;
+                        }
+
+                        .right-column {
+                            width: 45% !important;
+                            padding-left: 5px !important;
+                        }
+
+                        /* Hide admin-only content */
+                        .employee-print .salary-calculations,
+                        .employee-print .overtime-details {
+                            display: none !important;
+                        }
+
+                        /* Details styling */
+                        .detail-row, .total-row {
+                            border-bottom: 1px solid #000 !important;
+                            padding: 2px 0 !important;
+                            display: flex !important;
+                            justify-content: space-between !important;
+                        }
+
+                        .earnings, .deductions {
+                            background: white !important;
+                            border: none !important;
+                            padding: 5px !important;
+                        }
+
+                        /* Signature section */
+                        .signature-section {
+                            background: white !important;
+                            border-top: 1px solid #000 !important;
+                            padding: 5px !important;
+                            display: flex !important;
+                            flex-direction: column !important;
+                            gap: 10px !important;
+                        }
+
+                        .signature-group {
+                            width: 100% !important;
+                            margin-bottom: 10px !important;
+                        }
+
+                        .signature-label {
+                            font-size: 8pt !important;
+                            margin-bottom: 3px !important;
+                            text-align: left !important;
+                        }
+
+                        .signature-box {
+                            border: 1px solid #000 !important;
+                            height: 40px !important;
+                            width: 100% !important;
+                            margin-top: 5px !important;
+                        }
+
+                        /* Remarks section */
+                        .remarks-section {
+                            margin-top: 15px !important;
+                            padding: 15px !important;
+                            background-color: white !important;
+                            border: 1px solid #000 !important;
+                        }
+
+                        /* Font sizes and colors */
+                        * {
+                            color: black !important;
+                            background-color: white !important;
+                            font-size: 8pt !important;
+                        }
+
+                        .voucher-header h2 {
+                            font-size: 12pt !important;
+                            margin: 0 !important;
+                        }
+
+                        .section-title {
+                            font-size: 9pt !important;
+                            margin: 3px 0 !important;
+                            padding-bottom: 3px !important;
+                            border-bottom: 1px solid #000 !important;
+                        }
+                    }
+                `;
+                document.head.appendChild(style);
+
+                // Get the entire content including remarks
+                const voucherContainer = document.querySelector('.voucher-container');
+                const remarksSection = document.querySelector('.remarks-section');
+                
+                // Create wrapper div for both voucher and remarks
+                const wrapper = document.createElement('div');
+                wrapper.style.background = 'white';
+                wrapper.style.padding = '0';
+                wrapper.style.margin = '0';
+                wrapper.style.transform = 'scale(0.89)';
+                wrapper.style.transformOrigin = 'top left';
+                wrapper.style.width = '111.11%';
+                wrapper.style.position = 'relative';
+
+                wrapper.appendChild(voucherContainer.cloneNode(true));
+                if (remarksSection) {
+                    wrapper.appendChild(remarksSection.cloneNode(true));
+                }
+
+                // Configure PDF options for better quality and formatting
+                const pdfOptions = {
+                    margin: [10, 2, 10, 5],  // [top, right, bottom, left]
+                    filename: `${month}_${year}_SalaryVoucher_${employee}.pdf`,
+                    image: { type: 'jpeg', quality: 1 },
+                    html2canvas: { 
+                        scale: 2,
+                        useCORS: true,
+                        logging: false,
+                        backgroundColor: '#ffffff'
+                    },
+                    jsPDF: { 
+                        unit: 'mm', 
+                        format: 'a4', 
+                        orientation: 'portrait',
+                        compress: true
+                    }
+                };
+
+                // Generate PDF
+                const pdfData = await html2pdf().set(pdfOptions).from(wrapper).output('datauristring');
+
+                // Send to backend
+                const response = await fetch('http://localhost:3001/api/send-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        recipientEmail: email.trim(),
+                        recipientName: fullName,
+                        month: month,
+                        year: year,
+                        pdfBuffer: pdfData,
+                        fileName: `${month}_${year}_SalaryVoucher_${employee}.pdf`
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to send email');
+                }
+
+                const result = await response.json();
+                console.log('Email sent successfully:', result);
+                alert('Salary voucher has been sent successfully via email!');
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message || 'Error processing request. Please try again.');
+            } finally {
+                // Always clean up resources
+                cleanupAfterPdf();
+                if (loadingDiv.parentNode) {
+                    document.body.removeChild(loadingDiv);
+                }
+            }
+        }
+
+        // Function to delete salary record
+        async function deleteSalaryRecord() {
+            const month = document.getElementById('viewMonth').value;
+            const year = document.getElementById('viewYear').value;
+            const employee = document.getElementById('viewEmployee').value;
+
+            if (!month || !year || !employee) {
+                alert('Please select month, year, and employee first');
+                return;
+            }
+
+            // Ask for confirmation
+            if (!confirm("Confirm Delete?")) {
+                return;
+            }
+
+            try {
+                // Get reference to the salary record
+                const salaryRef = ref(database, `Salary/${year}/${month}/${employee}`);
+                
+                // Remove the record
+                await set(salaryRef, null);
+                
+                // Hide the salary voucher
+                document.getElementById('salaryVoucher').style.display = 'none';
+                
+                // Show success message
+                alert('Salary record has been deleted successfully');
+                
+            } catch (error) {
+                console.error("Error deleting salary record:", error);
+                alert("Error deleting salary record. Please try again.");
+            }
+        }
+          // Function to create loading indicator
+        function createLoadingDiv() {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.style.position = 'fixed';
+            loadingDiv.style.top = '30%';
+            loadingDiv.style.left = '50%';
+            loadingDiv.style.transform = 'translate(-50%, -50%)';
+            loadingDiv.style.padding = '20px';
+            loadingDiv.style.background = 'rgba(255,255,255,0.9)';
+            loadingDiv.style.border = '1px solid #ddd';
+            loadingDiv.style.borderRadius = '5px';
+            loadingDiv.style.zIndex = '9999';
+            loadingDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing PDF and sending email...';
+            return loadingDiv;
+        }
+
+        // Function to clean up after PDF operations
+        function cleanupAfterPdf() {
+            // Remove temporary print styles
+            const tempStyle = document.getElementById('temp-print-style');
+            if (tempStyle) {
+                document.head.removeChild(tempStyle);
+            }
+            
+            // Reset print classes
+            document.body.classList.remove('employee-print', 'admin-print');
+            
+            // Reset title
+            document.title = "Payroll History";
+        }
+
+function showConfirmationDialog(title, message, onConfirm, onCancel) {
+    const confirmed = confirm(message);
+    if (confirmed) {
+        onConfirm();
+    } else if (onCancel) {
+        onCancel();
+    }
+}
+        // Add the delete function before the closing tag
+        async function deleteSalaryRecord() {
+            const month = document.getElementById('viewMonth').value;
+            const year = document.getElementById('viewYear').value;
+            const employee = document.getElementById('viewEmployee').value;
+
+            if (!month || !year || !employee) {
+                alert('Please select month, year, and employee first');
+                return;
+            }
+
+            showConfirmationDialog(
+                'Delete Salary Record',
+                `Are you sure you want to delete the salary record for ${employee} (${month} ${year})? This action cannot be undo.`,
+                async () => {
+                    try {
+                        const salaryRef = ref(database, `Salary/${year}/${month}/${employee}`);
+                        await set(salaryRef, null);
+                        document.getElementById('salaryVoucher').style.display = 'none';
+                        hideConfirmationDialog();
+                        alert('Salary record has been deleted successfully');
+                    } catch (error) {
+                        console.error("Error deleting salary record:", error);
+                        hideConfirmationDialog();
+                        alert("Error deleting salary record. Please try again.");
+                    }
+                }
+            );
+        }
+
+        function showConfirmationDialog(title, message, onConfirm) {
+            const dialog = document.getElementById('confirmationDialog');
+            document.getElementById('confirmationTitle').textContent = title;
+            document.getElementById('confirmationMessage').textContent = message;
+            
+            // Remove any existing click handlers
+            const confirmButton = document.getElementById('confirmButton');
+            const newConfirmButton = confirmButton.cloneNode(true);
+            confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
+            
+            // Add new click handler
+            newConfirmButton.addEventListener('click', () => {
+                onConfirm();
+                dialog.classList.remove('show');
+            });
+
+            // Show the dialog with animation
+            dialog.classList.add('show');
+        }
+
+        function hideConfirmationDialog() {
+            const dialog = document.getElementById('confirmationDialog');
+            dialog.classList.remove('show');
+        }
+
+        // Update the event listener for the cancel button
+        document.querySelector('.btn-cancel').addEventListener('click', function(e) {
+            e.preventDefault();
+            hideConfirmationDialog();
+        });
+    </script>
+</body>
+</html>
