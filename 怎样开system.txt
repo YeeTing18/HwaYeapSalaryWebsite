@@ -1,4 +1,0 @@
-1.按 Malaysia.bat
-2.copy里面的http address
-3.打开浏览器 paste后enter
-
