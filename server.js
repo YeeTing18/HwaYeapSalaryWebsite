@@ -1,57 +1,38 @@
+require("dotenv").config(); // MUST be first
+
 const express = require("express");
 const path = require("path");
-//const nodemailer = require("nodemailer");
-const { Resend } = require('resend');
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 const cors = require("cors");
 const bodyParser = require("body-parser");
-require("dotenv").config();
+const { Resend } = require("resend");
 
 const app = express();
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 app.use(cors());
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
 
-// ✅ Serve Static Files from `public/`
+// Serve static files
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "login.html")); // Main Page
+  res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-// ✅ Configure Gmail SMTP for Sending Emails
-const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    tls: {
-        rejectUnauthorized: false
-    }
-});
-
-// ✅ Verify SMTP Connection
-transporter.verify((error, success) => {
-    if (error) {
-        console.error("SMTP connection error:", error);
-    } else {
-        console.log("SMTP server is ready to send emails");
-    }
-});
-
-// ✅ Email Sending Endpoint
+// Email Endpoint
 app.post("/api/send-email", async (req, res) => {
   try {
     const { recipientEmail, recipientName, month, year, pdfBuffer, fileName } = req.body;
 
+    if (!pdfBuffer) {
+      return res.status(400).json({ error: "Missing PDF file" });
+    }
+
     const base64File = pdfBuffer.split("base64,")[1];
 
     await resend.emails.send({
-      from: "Hwa Yeap Engineering <onboarding@resend.dev>", // temporary sender
+      from: "Hwa Yeap Engineering <onboarding@resend.dev>",
       to: recipientEmail,
       subject: `Salary Voucher for ${month} ${year}`,
       html: `
@@ -75,18 +56,17 @@ app.post("/api/send-email", async (req, res) => {
   }
 });
 
-
-// ✅ Error Handling Middleware
+// Error middleware
 app.use((err, req, res, next) => {
-    console.error("Server error:", err);
-    res.status(500).json({
-        error: "Internal server error",
-        details: err.message
-    });
+  console.error("Server error:", err);
+  res.status(500).json({
+    error: "Internal server error",
+    details: err.message
+  });
 });
 
-// ✅ Start the Server on Port `3001`
+// Start server
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
