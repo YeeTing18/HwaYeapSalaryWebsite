@@ -1,6 +1,9 @@
 const express = require("express");
 const path = require("path");
-const nodemailer = require("nodemailer");
+//const nodemailer = require("nodemailer");
+const { Resend } = require('resend');
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 const cors = require("cors");
 const bodyParser = require("body-parser");
 require("dotenv").config();
@@ -42,44 +45,36 @@ transporter.verify((error, success) => {
 
 // ✅ Email Sending Endpoint
 app.post("/api/send-email", async (req, res) => {
-    try {
-        const { recipientEmail, recipientName, month, year, pdfBuffer, fileName } = req.body;
+  try {
+    const { recipientEmail, recipientName, month, year, pdfBuffer, fileName } = req.body;
 
-        if (!recipientEmail || !recipientName || !month || !year || !pdfBuffer || !fileName) {
-            return res.status(400).json({ error: "Missing required fields" });
+    const base64File = pdfBuffer.split("base64,")[1];
+
+    await resend.emails.send({
+      from: "Hwa Yeap Engineering <onboarding@resend.dev>", // temporary sender
+      to: recipientEmail,
+      subject: `Salary Voucher for ${month} ${year}`,
+      html: `
+        <p>Dear ${recipientName},</p>
+        <p>Please find attached your salary voucher for ${month} ${year}.</p>
+        <p>Best regards,<br/>Hwa Yeap Engineering</p>
+      `,
+      attachments: [
+        {
+          filename: fileName,
+          content: base64File
         }
+      ]
+    });
 
-        const mailOptions = {
-            from: {
-                name: "Hwa Yeap Engineering",
-                address: process.env.EMAIL_USER
-            },
-            to: recipientEmail,
-            subject: `Salary Voucher for ${month} ${year}`,
-            text: `Dear ${recipientName},\n\nPlease find attached your salary voucher for ${month} ${year}.\n\nBest regards,\nHwa Yeap Engineering`,
-            attachments: [{
-                filename: fileName,
-                content: Buffer.from(pdfBuffer.split("base64,")[1], "base64"),
-                contentType: "application/pdf"
-            }]
-        };
+    res.json({ success: true });
 
-        const info = await transporter.sendMail(mailOptions);
-        console.log("Email sent:", info.messageId);
-
-        res.status(200).json({
-            message: "Email sent successfully",
-            messageId: info.messageId
-        });
-
-    } catch (error) {
-        console.error("Error sending email:", error);
-        res.status(500).json({
-            error: "Failed to send email",
-            details: error.message
-        });
-    }
+  } catch (error) {
+    console.error("Email error:", error);
+    res.status(500).json({ error: "Failed to send email" });
+  }
 });
+
 
 // ✅ Error Handling Middleware
 app.use((err, req, res, next) => {
