@@ -10,13 +10,17 @@ const app = express();
 
 // 配置 Gmail 发信通道 (Nodemailer)
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true, // 使用 SSL
   auth: {
     user: "abbey7341@gmail.com",
-    // 建议使用 process.env.GMAIL_APP_PASSWORD，
-    // 如果您现在想直接写死测试，请取消下面这行的注释并替换为您的 16 位代码：
-    pass: process.env.GMAIL_APP_PASSWORD || "hwhagjdnmrocwcid" 
+    pass: process.env.GMAIL_APP_PASSWORD || "hwhagjdnmrocwcid",
   },
+  // 增加超时设置，防止网络波动导致中断
+  connectionTimeout: 10000, // 10秒超时
+  greetingTimeout: 10000,
+  socketTimeout: 10000,
 });
 
 app.use(cors());
