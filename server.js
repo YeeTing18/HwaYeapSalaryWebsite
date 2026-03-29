@@ -1,72 +1,95 @@
-require("dotenv").config(); // MUST be first
+require("dotenv").config(); // 必须放在第一行
 
 const express = require("express");
 const path = require("path");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const { Resend } = require("resend");
+const nodemailer = require("nodemailer"); // 替换了 Resend
 
 const app = express();
-const resend = new Resend(process.env.RESEND_API_KEY);
+
+// 配置 Gmail 发信通道 (Nodemailer)
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: "abbey7341@gmail.com",
+    // 建议使用 process.env.GMAIL_APP_PASSWORD，
+    // 如果您现在想直接写死测试，请取消下面这行的注释并替换为您的 16 位代码：
+    pass: process.env.GMAIL_APP_PASSWORD || "hwhagjdnmrocwcid" 
+  },
+});
 
 app.use(cors());
+// 提高限额以处理大型 PDF 文件
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
 
-// Serve static files
+// 托管静态文件 (HTML/JS/Images)
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-// Email Endpoint
+// 邮件发送接口
 app.post("/api/send-email", async (req, res) => {
   try {
     const { recipientEmail, recipientName, month, year, pdfBuffer, fileName } = req.body;
 
     if (!pdfBuffer) {
-      return res.status(400).json({ error: "Missing PDF file" });
+      return res.status(400).json({ error: "缺少 PDF 文件数据" });
     }
 
-    const base64File = pdfBuffer.split("base64,")[1];
+    // 处理 Base64 数据并转换为 Node.js Buffer
+    const base64Data = pdfBuffer.split("base64,")[1];
+    const fileBuffer = Buffer.from(base64Data, 'base64');
 
-    await resend.emails.send({
-      from: "Hwa Yeap Engineering <abbey7341@gmail.com>",
-      to: recipientEmail,
-      subject: `HWA YEAP ENGINNERING - Salary Voucher for ${month} ${year}`,
+    // 配置邮件内容
+    const mailOptions = {
+      from: `"Hwa Yeap Engineering" <abbey7341@gmail.com>`, // 发件人
+      to: recipientEmail, // 收件人 (员工邮箱)
+      subject: `HWA YEAP ENGINEERING - Salary Voucher for ${month} ${year}`,
       html: `
         <p>Dear ${recipientName},</p>
-        <p>Please find attached your salary voucher for ${month} ${year}.</p>
-        <p>Best regards,<br/>Hwa Yeap Engineering</p>
+        <p>Please find attached your salary voucher for <b>${month} ${year}</b>.</p>
+        <p>If you have any questions, please ask the office staff.</p>
+        <br/>
+        <p>Best regards,<br/><b>Hwa Yeap Engineering</b></p>
       `,
       attachments: [
         {
           filename: fileName,
-          content: base64File
+          content: fileBuffer
         }
       ]
-    });
+    };
 
+    // 执行邮件发送
+    await transporter.sendMail(mailOptions);
+    
+    console.log(`成功发送邮件至: ${recipientEmail}`);
     res.json({ success: true });
 
   } catch (error) {
-    console.error("Email error:", error);
-    res.status(500).json({ error: "Failed to send email" });
+    console.error("邮件发送报错:", error);
+    res.status(500).json({ 
+      error: "邮件发送失败", 
+      details: error.message 
+    });
   }
 });
 
-// Error middleware
+// 错误处理中间件
 app.use((err, req, res, next) => {
-  console.error("Server error:", err);
+  console.error("服务器错误:", err);
   res.status(500).json({
-    error: "Internal server error",
+    error: "内部服务器错误",
     details: err.message
   });
 });
 
-// Start server
+// 启动服务器
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`服务器正在端口 ${PORT} 上运行`);
 });
