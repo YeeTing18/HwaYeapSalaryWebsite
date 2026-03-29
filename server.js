@@ -1,83 +1,67 @@
 require("dotenv").config();
-
 const express = require("express");
-const path = require("path");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-const nodemailer = require("nodemailer");
+const { google } = require("googleapis");
 
 const app = express();
+app.use(express.json({ limit: "50mb" }));
 
-// --- 核心修改部分：针对云服务器优化的 Gmail 配置 ---
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587, // 强制使用 465 端口
-  secure: false, // 465 端口必须设置为 true
-  auth: {
-    user: "abbey7341@gmail.com",
-    // 确保你的 Render 环境变量中 GMAIL_APP_PASSWORD 是 hwhagjdnmrocwcid (没有空格)
-    pass: process.env.GMAIL_APP_PASSWORD || "hwhagjdnmrocwcid" 
-  },
-  tls: {
-    // 关键配置：防止在云端环境下的证书验证失败
-    rejectUnauthorized: false 
-  }
-  // 增加超时时间，给服务器更多反应时间
-  connectionTimeout: 10000, 
-  greetingTimeout: 10000,
-  socketTimeout: 10000,
-});
+// Google API 配置
+const oAuth2Client = new google.auth.OAuth2(
+  process.env.GMAIL_CLIENT_ID,
+  process.env.GMAIL_CLIENT_SECRET,
+  "https://developers.google.com/oauthplayground"
+);
 
-app.use(cors());
-app.use(bodyParser.json({ limit: "50mb" }));
-app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
-app.use(express.static(path.join(__dirname, "public")));
+oAuth2Client.setCredentials({ refresh_token: process.env.GMAIL_REFRESH_TOKEN });
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "login.html"));
-});
-
-// 邮件发送接口
 app.post("/api/send-email", async (req, res) => {
   try {
     const { recipientEmail, recipientName, month, year, pdfBuffer, fileName } = req.body;
-
-    if (!pdfBuffer) {
-      return res.status(400).json({ error: "Missing PDF file" });
-    }
+    const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
 
     const base64Data = pdfBuffer.split("base64,")[1];
-    const fileBuffer = Buffer.from(base64Data, 'base64');
+    
+    // 构建 MIME 邮件格式 (Gmail API 要求)
+    const subject = `HWA YEAP ENGINEERING - Salary Voucher for ${month} ${year}`;
+    const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
+    const messageParts = [
+      `From: Hwa Yeap Engineering <abbey7341@gmail.com>`,
+      `To: ${recipientEmail}`,
+      `Subject: ${utf8Subject}`,
+      `MIME-Version: 1.0`,
+      `Content-Type: multipart/mixed; boundary="foo_bar_baz"`,
+      ``,
+      `--foo_bar_baz`,
+      `Content-Type: text/html; charset="utf-8"`,
+      `Content-Transfer-Encoding: 7bit`,
+      ``,
+      `<p>Dear ${recipientName},</p><p>Please find attached your salary voucher for ${month} ${year}.</p>`,
+      ``,
+      `--foo_bar_baz`,
+      `Content-Type: application/pdf`,
+      `Content-Disposition: attachment; filename="${fileName}"`,
+      `Content-Transfer-Encoding: base64`,
+      ``,
+      base64Data,
+      `--foo_bar_baz--`,
+    ];
+    const message = messageParts.join('\n');
+    const encodedMessage = Buffer.from(message)
+      .toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
 
-    const mailOptions = {
-      from: `"Hwa Yeap Engineering" <abbey7341@gmail.com>`,
-      to: recipientEmail,
-      subject: `HWA YEAP ENGINEERING - Salary Voucher for ${month} ${year}`,
-      html: `
-        <p>Dear ${recipientName},</p>
-        <p>Please find attached your salary voucher for ${month} ${year}.</p>
-        <p>Best regards,<br/>Hwa Yeap Engineering</p>
-      `,
-      attachments: [
-        {
-          filename: fileName,
-          content: fileBuffer
-        }
-      ]
-    };
+    await gmail.users.messages.send({
+      userId: 'me',
+      requestBody: { raw: encodedMessage },
+    });
 
-    // 发送邮件
-    await transporter.sendMail(mailOptions);
-    console.log(`Email successfully sent to ${recipientEmail}`);
     res.json({ success: true });
-
   } catch (error) {
-    console.error("邮件发送报错:", error);
-    res.status(500).json({ error: "邮件发送失败", details: error.message });
+    console.error("Gmail API Error:", error);
+    res.status(500).json({ error: "Failed to send" });
   }
 });
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.listen(process.env.PORT || 3001);
