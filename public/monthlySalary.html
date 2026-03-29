@@ -1602,7 +1602,16 @@
                         } else {
                             payLabel.textContent = 'BASIC PAY 基本支付 epf';
                             basicPayDisplay.textContent = `RM ${salaryData.basicPay || 0}`;
-                        }
+                        
+						 const payLabel2 = document.getElementById('payLabel2');
+						if (isIntern) {
+                            payLabel2.textContent = 'COMMISSIONS2 佣金';
+                          	
+                          
+                        } else {
+                            payLabel2.textContent = 'OVERTIME 超时';
+                          
+                        }}
 
                         // Call your existing display function for the rest of the data
                         displaySalaryData(salaryData, employee, month, year);
