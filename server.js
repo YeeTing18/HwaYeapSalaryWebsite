@@ -32,9 +32,9 @@ app.post("/api/send-email", async (req, res) => {
     const base64File = pdfBuffer.split("base64,")[1];
 
     await resend.emails.send({
-      from: "Hwa Yeap Engineering <onboarding@resend.dev>",
+      from: "Hwa Yeap Engineering <abbey7341@gmail.com>",
       to: recipientEmail,
-      subject: `Salary Voucher for ${month} ${year}`,
+      subject: `HWA YEAP ENGINNERING - Salary Voucher for ${month} ${year}`,
       html: `
         <p>Dear ${recipientName},</p>
         <p>Please find attached your salary voucher for ${month} ${year}.</p>
