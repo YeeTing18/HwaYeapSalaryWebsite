@@ -3003,7 +3003,7 @@
                     
                     // Update UI with retrieved data
                     // Basic Pay and Allowances
-		    document.getElementById('remarks').textContent = salaryData.remarks;
+		    document.getElementById('remarks').value = salaryData.remarks || '';
 
                     document.getElementById('basicPay').textContent = `RM ${formatNumber(salaryData.basicPay || 0)}`;
                     document.getElementById('allowances').textContent = `RM ${formatNumber(salaryData.allowances || 0)}`;
