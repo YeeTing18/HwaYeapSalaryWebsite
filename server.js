@@ -11,13 +11,17 @@ const app = express();
 // --- 核心修改部分：针对云服务器优化的 Gmail 配置 ---
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 465, // 强制使用 465 端口
-  secure: true, // 465 端口必须设置为 true
+  port: 587, // 强制使用 465 端口
+  secure: false, // 465 端口必须设置为 true
   auth: {
     user: "abbey7341@gmail.com",
     // 确保你的 Render 环境变量中 GMAIL_APP_PASSWORD 是 hwhagjdnmrocwcid (没有空格)
     pass: process.env.GMAIL_APP_PASSWORD || "hwhagjdnmrocwcid" 
   },
+  tls: {
+    // 关键配置：防止在云端环境下的证书验证失败
+    rejectUnauthorized: false 
+  }
   // 增加超时时间，给服务器更多反应时间
   connectionTimeout: 10000, 
   greetingTimeout: 10000,
