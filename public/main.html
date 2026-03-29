@@ -3008,7 +3008,7 @@
                     document.getElementById('basicPay').textContent = `RM ${formatNumber(salaryData.basicPay || 0)}`;
                     document.getElementById('allowances').textContent = `RM ${formatNumber(salaryData.allowances || 0)}`;
                     // Assuming 'data' is the object returned from Firebase
-                    document.getElementById('remark').value = salaryData.remark || '';
+                    document.getElementById('remark').textContent = salaryData.remark || '';
                     // Deductions - Add null checks
                     if (salaryData.deductions) {
                         document.getElementById('epfEmployee').value = salaryData.deductions.epfEmployee || 0;
