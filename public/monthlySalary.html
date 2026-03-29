@@ -1592,10 +1592,13 @@
                         
                         // 3. Update the label and value based on the position
                         const payLabel = document.getElementById('payLabel');
+						
+						const payLabel2 = document.getElementById('payLabel2');
                         const basicPayDisplay = document.getElementById('basicPay');
 
                         if (isIntern) {
                             payLabel.textContent = 'COMMISSIONS 佣金';
+							payLabel2.textContent = 'COMMISSIONS2 佣金2';
                             // Check if stored as allowance or basicPay
                             const amount = salaryData.basicPay || 0;
                             basicPayDisplay.textContent = `RM ${amount}`;
@@ -1603,15 +1606,7 @@
                             payLabel.textContent = 'BASIC PAY 基本支付 epf';
                             basicPayDisplay.textContent = `RM ${salaryData.basicPay || 0}`;
                         
-						 const payLabel2 = document.getElementById('payLabel2');
-						if (isIntern) {
-                            payLabel2.textContent = 'COMMISSIONS2 佣金';
-                          	
-                          
-                        } else {
-                            payLabel2.textContent = 'OVERTIME 超时';
-                          
-                        }}
+					
 
                         // Call your existing display function for the rest of the data
                         displaySalaryData(salaryData, employee, month, year);
