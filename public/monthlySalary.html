@@ -803,6 +803,17 @@
                 font-size: 10pt !important;
                 color: black !important;
             }
+
+            /* Same as emailed PDF: hide Daily/Hourly/OT rate grid (Print for Employee) */
+            body.print-employee-email-copy .salary-calculations {
+                display: none !important;
+                visibility: hidden !important;
+                height: 0 !important;
+                overflow: hidden !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                border: none !important;
+            }
         }
 
         /* Add Salary Calculations Styles */
@@ -1149,6 +1160,9 @@
                     <button type="button" class="btn btn-primary" onclick="printVoucher()">
                         <i class="fas fa-print"></i> Print voucher
                     </button>
+                    <button type="button" class="btn btn-outline-primary" onclick="printForEmployee()" title="Preview the employee/emailed layout (no Salary Calculations rate grid)">
+                        <i class="fas fa-user"></i> Print for Employee
+                    </button>
                     <button class="btn btn-info" onclick="sendPdfByEmail()">
                         <i class="fas fa-envelope"></i> Send PDF by Email
                     </button>
@@ -1343,7 +1357,7 @@
                                
                                 
                                 <div class="signature-group">
-                                    <div class="signature-label">EMPLOYEES SIGNATURE 雇员签名</div>
+                                    <div class="signature-label">Bank Account 银行户口</div>
                                     <div class="signature-box" id="employeeSignature">Signature / Date</div>
                                 </div>
                                 
@@ -2010,8 +2024,10 @@
             <table>
                  <tr>
             <td colspan="5" style="text-align:center;">
-                <img src="C:/Users/ongch/Desktop/V15/HWAYEAP/public/HwaYeapLogo.jpg" alt="Company Logo" width="150" height="80">
-            </td>
+                <!-- <img src="C:/Users/ongch/Desktop/V15/HWAYEAP/public/HwaYeapLogo.jpg" alt="Company Logo" width="150" height="80"> -->
+                    <img src="HwaYeapLogo.jpg" alt="Logo" crossorigin="anonymous">
+                    <img src="hwaYeapStamp.png" alt="Company Stamp" crossorigin="anonymous">
+                </td>
               </tr>
                 <tr><td colspan="5" style="text-align:center;font-weight:bold;font-size:16pt">
                     ${companyName}
@@ -2040,14 +2056,39 @@
         alert("Failed to generate Excel file. Please check console for details.");
     }
 }
-        /** Single print layout: OT breakdown + deduction calculations + salary rates */
+        /** Same-origin email API (Express). Override only if frontend and API use different origins, e.g.:
+         *   window.SEND_EMAIL_API_BASE = 'http://localhost:3001';
+         */
+        function resolveSendEmailUrl() {
+            try {
+                var base = typeof window.SEND_EMAIL_API_BASE === 'string' ? window.SEND_EMAIL_API_BASE.trim() : '';
+                if (base) return base.replace(/\/$/, '') + '/api/send-email';
+            } catch (e) {}
+            return '/api/send-email';
+        }
+
+        /** Full print: includes Salary Calculations (daily/hourly/OT rates). */
         function printVoucher() {
-            document.body.classList.remove('employee-print', 'admin-print');
+            document.body.classList.remove('employee-print', 'admin-print', 'print-employee-email-copy');
             const employee = document.getElementById('viewEmployee').value;
             const month = document.getElementById('viewMonth').value;
             document.title = `${month}_SalaryVoucher_${employee}`;
             window.print();
             setTimeout(() => {
+                document.title = 'Print BankIn Slip';
+            }, 1000);
+        }
+
+        /** Employee / emailed layout: hides Salary Calculations block (matches PDF sent by email). */
+        function printForEmployee() {
+            document.body.classList.remove('employee-print', 'admin-print');
+            document.body.classList.add('print-employee-email-copy');
+            const employee = document.getElementById('viewEmployee').value;
+            const month = document.getElementById('viewMonth').value;
+            document.title = `${month}_SalaryVoucher_Employee_${employee}`;
+            window.print();
+            setTimeout(() => {
+                document.body.classList.remove('print-employee-email-copy');
                 document.title = 'Print BankIn Slip';
             }, 1000);
         }
@@ -2343,7 +2384,7 @@
                 const pdfData = await html2pdf().set(pdfOptions).from(wrapper).output('datauristring');
 
                 // Send to backend
-                const response = await fetch('http://localhost:3001/api/send-email', {
+                const response = await fetch(resolveSendEmailUrl(), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2369,7 +2410,16 @@
 
             } catch (error) {
                 console.error('Error:', error);
-                alert(error.message || 'Error processing request. Please try again.');
+                var msg = error.message || 'Error processing request. Please try again.';
+                if (error && error.name === 'TypeError' && String(msg).indexOf('fetch') !== -1) {
+                    msg =
+                        'Cannot reach the email API. Open this app through your Node server (npm start), not as a bare HTML file.\n\n' +
+                        'On Render: use the same URL as your site — the API is /api/send-email on that host.\n\n' +
+                        'If the page is on Live Server but email runs on port 3001, set:\n' +
+                        'window.SEND_EMAIL_API_BASE = "http://localhost:3001";\n\n' +
+                        'Original error: ' + msg;
+                }
+                alert(msg);
             } finally {
                 cleanupAfterPdf();
                 if (loadingDiv && loadingDiv.parentNode) {
@@ -2437,7 +2487,7 @@
             }
             
             // Reset print classes
-            document.body.classList.remove('employee-print', 'admin-print');
+            document.body.classList.remove('employee-print', 'admin-print', 'print-employee-email-copy');
             
             // Reset title
             document.title = 'Print BankIn Slip';
