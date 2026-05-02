@@ -2383,38 +2383,30 @@
                 // Generate PDF
                 const pdfData = await html2pdf().set(pdfOptions).from(wrapper).output('datauristring');
 
-                // Send to backend
-                // Replace the old fetch block with this improved version:
-                try {
-                    const response = await fetch(resolveSendEmailUrl(), {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            email: currentRecord.email,
-                            subject: `Salary Voucher - ${currentRecord.month} ${currentRecord.year}`,
-                            pdfData: pdfBase64,
-                            employeeName: currentRecord.name,
-                            month: currentRecord.month,
-                            year: currentRecord.year
-                        })
-                    });
-                
-                    // CHANGE: Check if response is NOT okay and get the specific error from the server
-                    if (!response.ok) {
-                        const errorResult = await response.json().catch(() => ({})); 
-                        throw new Error(errorResult.error || `Server Error ${response.status}: Failed to send email.`);
-                    }
-                
-                    const result = await response.json();
-                    alert("Email sent successfully!");
-                
-                } catch (error) {
-                    console.error("Email Error:", error);
-                    // CHANGE: Display the actual error message so you know WHY it failed (e.g., "Invalid API Key")
-                    alert("Error: " + error.message);
+                const response = await fetch(resolveSendEmailUrl(), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        recipientEmail: email,
+                        recipientName: displayName,
+                        month,
+                        year,
+                        pdfBuffer: pdfData,
+                        fileName: `${month}_${year}_SalaryVoucher_${employee}.pdf`
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorResult = await response.json().catch(() => ({}));
+                    throw new Error(
+                        errorResult.error ||
+                            errorResult.details ||
+                            `Server Error ${response.status}: Failed to send email.`
+                    );
                 }
+
+                await response.json();
+                alert('Email sent successfully!');
 
             } catch (error) {
                 console.error('Error:', error);
