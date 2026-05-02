@@ -1821,48 +1821,34 @@
                                         </div>
                                     </div>
                                     
-                                   <div class="salary-calculations" style="background-color: #FFF0F0; padding: 15px 25px; border-bottom: 1px solid #FFD6D6;">
+                                    <div class="salary-calculations" style="background-color: #FFF0F0; padding: 15px 25px; border-bottom: 1px solid #FFD6D6;">
                                         <div class="row">
-                                            <!-- Daily Salary -->
                                             <div class="col-md-3">
                                                 <div class="calculation-item">
                                                     <div class="calculation-label" style="font-weight: 600; color: var(--primary);">日薪 SALARY PER DAYS</div>
-                                                    <div class="calculation-formula" id="dailySalaryFormula" style="font-size: 0.9rem; color: #666;">(Manual)</div>
-                                                    <div class="input-group input-group-sm mt-1">
-                                                        <span class="input-group-text">RM</span>
-                                                        <input type="number" id="dailySalary" class="form-control" step="0.01" value="0.00" style="font-weight: 600; color: var(--primary);">
-                                                    </div>
+                                                    <div class="calculation-formula" id="dailySalaryFormula" style="font-size: 0.9rem; color: #666;">(BASIC/45/4*9)</div>
+                                                    <div class="calculation-value" id="dailySalary" style="font-weight: 600; color: var(--primary);">RM 0.00</div>
                                                 </div>
                                             </div>
-                                            <!-- Hourly Salary -->
                                             <div class="col-md-3">
                                                 <div class="calculation-item">
                                                     <div class="calculation-label" style="font-weight: 600; color: var(--primary);">时薪 SALARY PER HOURS</div>
-                                                    <div class="calculation-formula" id="hourlySalaryFormula" style="font-size: 0.9rem; color: #666;">(Manual)</div>
-                                                    <div class="input-group input-group-sm mt-1">
-                                                        <span class="input-group-text">RM</span>
-                                                        <input type="number" id="hourlySalary" class="form-control" step="0.01" value="0.00" style="font-weight: 600; color: var(--primary);">
-                                                    </div>
+                                                    <div class="calculation-formula" id="hourlySalaryFormula" style="font-size: 0.9rem; color: #666;">(BASIC/45/4)</div>
+                                                    <div class="calculation-value" id="hourlySalary" style="font-weight: 600; color: var(--primary);">RM 0.00</div>
                                                 </div>
                                             </div>
-                                            <!-- OT 1.5 -->
                                             <div class="col-md-3">
                                                 <div class="calculation-item">
-                                                    <div class="calculation-label">OT-1.5 Rate</div>
-                                                    <div class="input-group input-group-sm mt-1">
-                                                        <span class="input-group-text">RM</span>
-                                                        <input type="number" id="ot1_5" class="form-control" step="0.01" value="0.00">
-                                                    </div>
+                                                    <div class="calculation-label" style="font-weight: 600; color: var(--primary);">OT-1.5</div>
+                                                    <div class="calculation-formula" id="ot15Formula" style="font-size: 0.9rem; color: #666;">(HOURLY*1.5)</div>
+                                                    <div class="calculation-value" id="ot1_5" style="font-weight: 600; color: var(--primary);">RM 0.00</div>
                                                 </div>
                                             </div>
-                                            <!-- OT 2.0 -->
                                             <div class="col-md-3">
                                                 <div class="calculation-item">
-                                                    <div class="calculation-label">OT-2.0 Rate</div>
-                                                    <div class="input-group input-group-sm mt-1">
-                                                        <span class="input-group-text">RM</span>
-                                                        <input type="number" id="ot2_0" class="form-control" step="0.01" value="0.00">
-                                                    </div>
+                                                    <div class="calculation-label" style="font-weight: 600; color: var(--primary);">OT-2.0</div>
+                                                    <div class="calculation-formula" id="ot20Formula" style="font-size: 0.9rem; color: #666;">(HOURLY*2.0)</div>
+                                                    <div class="calculation-value" id="ot2_0" style="font-weight: 600; color: var(--primary);">RM 0.00</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1961,27 +1947,25 @@
                                                     </div>
                                                 </div>
                                                 
-                                                <!-- Daily Deduction -->
                                                 <div class="detail-row">
                                                     <span class="detail-label">DAILY DEDUCTION 每日扣除</span>
-                                                    <div class="input-group input-group-sm" style="width: 320px;">
-                                                        <input type="number" class="form-control" id="dailyDeductionDays" placeholder="Days">
+                                                    <div class="input-group input-group-sm" style="width: 300px;">
+                                                        <input type="number" class="form-control text-end" id="dailyDeductionDays" min="0" step="0.5" placeholder="Days" style="width: 40%;">
                                                         <span class="input-group-text">×</span>
-                                                        <input type="number" class="form-control" id="dailyDeduction" placeholder="Rate (RM)">
-                                                        <span class="input-group-text">Total RM</span>
-                                                        <input type="number" class="form-control" id="dailyDeductionTotal" readonly>
+                                                        <input type="number" class="form-control text-end" id="dailyDeduction" readonly style="width: 40%; text-align: right;">
+                                                        <span class="input-group-text">RM</span>
+                                                        <input type="number" class="form-control text-end" id="dailyDeductionTotal" readonly style="width: 40%; text-align: right;">
                                                     </div>
                                                 </div>
-
-                                                <!-- Hours Deduction -->
+                                                
                                                 <div class="detail-row">
                                                     <span class="detail-label">HOURS DEDUCTION 小时扣除</span>
-                                                    <div class="input-group input-group-sm" style="width: 320px;">
-                                                        <input type="number" class="form-control" id="hoursDeductionHours" placeholder="Hours">
+                                                    <div class="input-group input-group-sm" style="width: 300px;">
+                                                        <input type="number" class="form-control text-end" id="hoursDeductionHours" min="0" step="0.5" placeholder="Hours" style="width: 40%;">
                                                         <span class="input-group-text">×</span>
-                                                        <input type="number" class="form-control" id="hoursDeduction" placeholder="Rate (RM)">
-                                                        <span class="input-group-text">Total RM</span>
-                                                        <input type="number" class="form-control" id="hoursDeductionTotal" readonly>
+                                                        <input type="number" class="form-control text-end" id="hoursDeduction" readonly style="width: 40%; text-align: right;">
+                                                        <span class="input-group-text">RM</span>
+                                                        <input type="number" class="form-control text-end" id="hoursDeductionTotal" readonly style="width: 40%; text-align: right;">
                                                     </div>
                                                 </div>
                                                 
@@ -2175,22 +2159,6 @@
     </script>
     <script>
         // Toggle sidebar
-        // Place this at the top of your main page script
-        function calculateFromFormula(formulaStr, variables) {
-            try {
-                let mathExpression = formulaStr;
-                // Replace variable names (like BASIC) with numbers from your variables object
-                for (const [key, value] of Object.entries(variables)) {
-                    mathExpression = mathExpression.replace(new RegExp(key, 'g'), value);
-                }
-                // Converts the string "2500/45/4*9" into a real number
-                return new Function(`return ${mathExpression}`)();
-            } catch (e) {
-                console.error("Math error in formula:", e);
-                return 0;
-            }
-        }
-
         document.querySelector('.toggle-sidebar').addEventListener('click', function() {
             document.body.classList.toggle('sidebar-collapsed');
             
@@ -2298,40 +2266,78 @@
         }
 
         // Add event listener for employee selection
-        // Add event listener for employee selection
         document.getElementById('employeeSelect').addEventListener('change', function(e) {
             const selectedEmployee = e.target.value;
             if (selectedEmployee) {
+                // Load employee details
                 const employeeRef = ref(database, `Employee/${selectedEmployee}`);
                 get(employeeRef).then((snapshot) => {
                     if (snapshot.exists()) {
                         const employeeData = snapshot.val();
+                        console.log('Employee Data:', employeeData); // Debug log
                         
-                        // Keep the static info
-                        document.getElementById('icNumber').textContent = employeeData.icNumber || '-';
-                        document.getElementById('bankAccount').textContent = employeeData.bankAccount || '-';
-                        document.querySelector('.signature-group:nth-child(2) .signature-box').textContent = employeeData.bankAccount || '-';
-
-                        // Keep Basic Pay and Allowances as references
-                        let basicPay = parseFloat(employeeData.basicPay) || 0;
-                        let allowances = parseFloat(employeeData.allowances) || 0;
-                        document.getElementById('basicPay').textContent = `RM ${formatNumber(basicPay)}`;
-                        document.getElementById('allowances').textContent = `RM ${formatNumber(allowances)}`;
-
-                        // --- REMOVED AUTO-CALCULATION LOGIC HERE ---
-                        // We set them to empty strings so the user MUST type them in
-                        document.getElementById('dailySalary').value = '';
-                        document.getElementById('hourlySalary').value = '';
-                        document.getElementById('ot1_5').value = '';
-                        document.getElementById('ot2_0').value = '';
-                        
-                        // Clear employer fields
-                        document.getElementById('employerEpf').value = '';
-                        document.getElementById('employerSocso').value = '';
-                        document.getElementById('employerEis').value = '';
-
-                        updateGrossPay();
+                        try {
+                            // Update employee details with null checks and default values
+                            document.getElementById('icNumber').textContent = employeeData.icNumber || '-';
+                            document.getElementById('bankAccount').textContent = employeeData.bankAccount || '-';
+                            
+                            // Update signature box with bank account
+                            document.querySelector('.signature-group:nth-child(2) .signature-box').textContent = 
+                                employeeData.bankAccount || '-';
+                            
+                            // Safely convert and validate basicPay with default value
+                            let basicPay = 0;
+                            if (employeeData.basicPay !== undefined && employeeData.basicPay !== null) {
+                                basicPay = parseFloat(employeeData.basicPay);
+                                if (isNaN(basicPay)) basicPay = 0;
+                            }
+                            document.getElementById('basicPay').textContent = `RM ${formatNumber(basicPay)}`;
+                            
+                            // Safely convert and validate allowances with default value
+                            let allowances = 0;
+                            if (employeeData.allowances !== undefined && employeeData.allowances !== null) {
+                                allowances = parseFloat(employeeData.allowances);
+                                if (isNaN(allowances)) allowances = 0;
+                            }
+                            document.getElementById('allowances').textContent = `RM ${formatNumber(allowances)}`;
+                            
+                            // Calculate daily salary (BASIC/45/4*9)
+                            const dailySalary = (basicPay / 45 / 4 * 9);
+                            document.getElementById('dailySalary').textContent = `RM ${formatNumber(dailySalary)}`;
+                            
+                            // Calculate hourly salary (BASIC/45/4) without rounding
+                            const hourlySalary = (basicPay / 45 / 4);
+                            document.getElementById('hourlySalary').textContent = `RM ${formatNumber(hourlySalary)}`;
+                            
+                            // Set hourly rate for overtime calculations
+                            window.currentHourlyRate = hourlySalary;
+                            
+                            // Update overtime rates
+                            document.getElementById('ot1_5').textContent = `RM ${formatNumber(hourlySalary * 1.5)}`;
+                            document.getElementById('ot2_0').textContent = `RM ${formatNumber(hourlySalary * 2.0)}`;
+                            
+                            // Clear employer contribution fields
+                            document.getElementById('employerEpf').value = '';
+                            document.getElementById('employerSocso').value = '';
+                            document.getElementById('employerEis').value = '';
+                            document.getElementById('totalEmployerContribution').textContent = 'RM 0.00';
+                            
+                            // Update gross pay
+                            updateGrossPay();
+                        } catch (error) {
+                            console.error("Error processing employee data:", error);
+                            console.log("Employee data that caused error:", employeeData);
+                            alert("Error processing employee data. Please check the console for details.");
+                            resetEmployeeFields();
+                        }
+                    } else {
+                        console.log('No employee data found for:', selectedEmployee);
+                        resetEmployeeFields();
                     }
+                }).catch((error) => {
+                    console.error("Error loading employee details:", error);
+                    alert("Error loading employee details. Please try again.");
+                    resetEmployeeFields();
                 });
             } else {
                 resetEmployeeFields();
@@ -2340,25 +2346,42 @@
 
         // Helper function to reset employee fields
         function resetEmployeeFields() {
-            // Clear Labels
-            document.getElementById('icNumber').textContent = '-';
-            document.getElementById('bankAccount').textContent = '-';
-            document.getElementById('basicPay').textContent = 'RM 0.00';
-            document.getElementById('allowances').textContent = 'RM 0.00';
+            const elements = {
+                'icNumber': '-',
+                'bankAccount': '-',
+                'basicPay': 'RM 0.00',
+                'allowances': 'RM 0.00',
+                'dailySalary': 'RM 0.00',
+                'hourlySalary': 'RM 0.00',
+                'ot1_5': 'RM 0.00',
+                'ot2_0': 'RM 0.00',
+                'totalEmployerContribution': 'RM 0.00'
+            };
 
-            // Clear Manual Inputs (Important: use .value for inputs)
-            const manualInputs = [
-                'dailySalary', 'hourlySalary', 'ot1_5', 'ot2_0', 
-                'employerEpf', 'employerSocso', 'employerEis',
-                'dailyDeductionDays', 'dailyDeduction', 'dailyDeductionTotal',
-                'hoursDeductionHours', 'hoursDeduction', 'hoursDeductionTotal'
-            ];
-
-            manualInputs.forEach(id => {
+            // Safely update each element
+            Object.entries(elements).forEach(([id, value]) => {
                 const element = document.getElementById(id);
-                if (element) element.value = '';
+                if (element) {
+                    element.textContent = value;
+                }
             });
 
+            // Reset input fields
+            const inputFields = ['employerEpf', 'employerSocso', 'employerEis'];
+            inputFields.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.value = '';
+                }
+            });
+
+            // Reset signature box
+            const signatureBox = document.querySelector('.signature-group:nth-child(2) .signature-box');
+            if (signatureBox) {
+                signatureBox.textContent = '-';
+            }
+
+            window.currentHourlyRate = 0;
             updateGrossPay();
         }
 
@@ -2505,10 +2528,10 @@
                 grossPay: parseFloat(document.getElementById('grossPayAmount').textContent.replace('RM ', '')) || 0,
                 // Add salary calculations
                 salaryCalculations: {
-                    dailySalary: parseFloat(document.getElementById('dailySalary').value.replace('RM ', '')) || 0,
-                    hourlySalary: parseFloat(document.getElementById('hourlySalary').value.replace('RM ', '')) || 0,
-                    ot1_5Rate: parseFloat(document.getElementById('ot1_5').value.replace('RM ', '')) || 0,
-                    ot2_0Rate: parseFloat(document.getElementById('ot2_0').value.replace('RM ', '')) || 0
+                    dailySalary: parseFloat(document.getElementById('dailySalary').textContent.replace('RM ', '')) || 0,
+                    hourlySalary: parseFloat(document.getElementById('hourlySalary').textContent.replace('RM ', '')) || 0,
+                    ot1_5Rate: parseFloat(document.getElementById('ot1_5').textContent.replace('RM ', '')) || 0,
+                    ot2_0Rate: parseFloat(document.getElementById('ot2_0').textContent.replace('RM ', '')) || 0
                 },
                 deductions: {
                     epfEmployee: parseFloat(document.getElementById('epfEmployee').value) || 0,
@@ -2562,59 +2585,43 @@
         let overtimeEntries = [];
 
         document.getElementById('addOvertime').addEventListener('click', function() {
-    const hours = parseFloat(document.getElementById('otHours').value) || 0;
-    const multiplier = document.getElementById('otMultiplier').value;
-    let rate = 0;
+            const hours = parseFloat(document.getElementById('otHours').value);
+            const multiplier = parseFloat(document.getElementById('otMultiplier').value);
+            
+            if (isNaN(hours) || hours <= 0) {
+                alert('Please enter valid hours');
+                return;
+            }
 
-    // Get the rate based on the multiplier selected
-    if (multiplier === "1.5") {
-        rate = parseFloat(document.getElementById('ot1_5').value) || 0;
-    } else if (multiplier === "2.0") {
-        rate = parseFloat(document.getElementById('ot2_0').value) || 0;
-    }
+            if (!window.currentHourlyRate) {
+                alert('Please select an employee first');
+                return;
+            }
 
-    if (hours > 0 && rate > 0) {
-        const totalOTAmount = hours * rate * multiplier;
+            const overtimeAmount = (hours * window.currentHourlyRate * multiplier).toFixed(2);
+            overtimeEntries.push({ hours, multiplier, amount: overtimeAmount });
 
-        // Push to the global array so the data persists
-        overtimeEntries.push({
-            hours: hours,
-            multiplier: multiplier,
-            rate: rate,
-            amount: totalOTAmount
+            // Add to list
+            const entry = document.createElement('div');
+            entry.className = 'overtime-entry';
+            entry.style.marginBottom = '5px';
+            entry.innerHTML = `
+                <span class="overtime-hours">${hours}</span>
+                <span class="overtime-multiplier">${multiplier}</span>
+                <span class="overtime-amount">RM ${overtimeAmount}</span>
+                <button class="btn btn-sm btn-outline-danger ms-2" onclick="removeOvertime(${overtimeEntries.length - 1})">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            document.getElementById('overtimeList').appendChild(entry);
+
+            // Update total
+            updateOvertimeTotal();
+
+            // Clear inputs
+            document.getElementById('otHours').value = '';
         });
 
-        // Call the display function (see Step 2)
-        renderOvertimeUI();
-        
-        // Update the totals
-        updateOvertimeTotal();
-
-        // Clear input
-        document.getElementById('otHours').value = '';
-    } else {
-        alert("Please ensure hours and rates are entered.");
-    }
-});
-function renderOvertimeUI() {
-    const listElement = document.getElementById('overtimeList');
-    listElement.innerHTML = ''; // Clear current view
-
-    overtimeEntries.forEach((entry, i) => {
-        const entryElement = document.createElement('div');
-        entryElement.className = 'overtime-entry';
-        entryElement.style.marginBottom = '5px';
-        entryElement.innerHTML = `
-            <span class="overtime-hours">${entry.hours} hrs</span>
-            <span class="overtime-multiplier">(${entry.multiplier}x)</span>
-            <span class="overtime-amount">RM ${entry.amount.toFixed(2)}</span>
-            <button class="btn btn-sm btn-outline-danger ms-2" onclick="removeOvertime(${i})">
-                <i class="fas fa-times"></i>
-            </button>
-        `;
-        listElement.appendChild(entryElement);
-    });
-}
         // Function to update overtime total
         function updateOvertimeTotal() {
             console.log('Updating overtime total, entries:', overtimeEntries); // Debug log
@@ -2627,17 +2634,6 @@ function renderOvertimeUI() {
             document.getElementById('totalOvertime').textContent = `RM ${formatNumber(total)}`;
             document.getElementById('totalOvertimeRow').style.display = total > 0 ? 'flex' : 'none';
             updateGrossPay(); // Update gross pay when overtime changes
-        }
-        function updateOvertimeList() {
-            const listElement = document.getElementById('otListContainer'); // Use your ID
-            listElement.innerHTML = ''; // Clear old list
-
-            overtimeEntries.forEach((entry, index) => {
-                listElement.innerHTML += `
-                    <div class="ot-row">
-                        ${entry.hours} hrs @ ${entry.rate} (${entry.multiplier}x) = RM ${entry.amount.toFixed(2)}
-                    </div>`;
-            });
         }
 
         // Function to remove overtime entry
@@ -3015,19 +3011,13 @@ function renderOvertimeUI() {
                     document.getElementById('remarks').textContent = salaryData.remarks || '';
                     // Deductions - Add null checks
                     if (salaryData.deductions) {
-                        
-                        document.getElementById('dailySalary').value = salaryData.salaryCalculations.dailySalary || 0;
-                        document.getElementById('hourlySalary').value = salaryData.salaryCalculations.hourlySalary || 0;
-                        document.getElementById('ot1_5').value = salaryData.salaryCalculations.ot1_5Rate || 0;
-                        document.getElementById('ot2_0').value = salaryData.salaryCalculations.ot2_0Rate || 0;
-
                         document.getElementById('epfEmployee').value = salaryData.deductions.epfEmployee || 0;
                         document.getElementById('socso').value = salaryData.deductions.socso || 0;
                         document.getElementById('eis').value = salaryData.deductions.eis || 0;
                         document.getElementById('pcb').value = salaryData.deductions.pcb || 0;
                         document.getElementById('advanceLoan').value = salaryData.deductions.advanceLoan || 0;
                         document.getElementById('advanceLoanType').value = salaryData.deductions.advanceLoanType || '';
-                        // document.getElementById('dailyDeduction').value = salaryData.deductions.dailyDeduction || 0;
+                        document.getElementById('dailyDeduction').value = salaryData.deductions.dailyDeduction || 0;
                         document.getElementById('dailyDeductionDays').value = salaryData.deductions.dailyDeductionDays || 0;
                         document.getElementById('dailyDeductionTotal').value = salaryData.deductions.dailyDeductionTotal || 0;
                         document.getElementById('hoursDeduction').value = salaryData.deductions.hoursDeduction || 0;
@@ -3043,7 +3033,7 @@ function renderOvertimeUI() {
                         document.getElementById('pcb').value = 0;
                         document.getElementById('advanceLoan').value = 0;
                         document.getElementById('advanceLoanType').value = '';
-                        // document.getElementById('dailyDeduction').value = 0;
+                        document.getElementById('dailyDeduction').value = 0;
                         document.getElementById('dailyDeductionDays').value = 0;
                         document.getElementById('dailyDeductionTotal').value = 0;
                         document.getElementById('hoursDeduction').value = 0;
@@ -3086,7 +3076,7 @@ function renderOvertimeUI() {
                             <span class="overtime-multiplier">${entry.multiplier}</span>
                                 <span class="overtime-amount">RM ${entry.amount.toFixed(2)}</span>
                             <button class="btn btn-sm btn-outline-danger ms-2" onclick="removeOvertime(${i})">
-                                <i class="fas fa-times">    </i>
+                                <i class="fas fa-times"></i>
                             </button>
                         `;
                         document.getElementById('overtimeList').appendChild(entryElement);
@@ -3165,74 +3155,16 @@ function renderOvertimeUI() {
             document.getElementById('hoursDeductionHours').addEventListener('input', calculateHoursDeduction);
         });
 
-        // function calculateDailyDeduction() {
-        //     const days = parseFloat(document.getElementById('dailyDeductionDays').value) || 0;
-        //     const dailyRate = parseFloat(document.getElementById('dailySalary').textContent.replace('RM ', '')) || 0;
-        //     const total = days * dailyRate;
-            
-        //     document.getElementById('dailyDeduction').value = dailyRate.toFixed(2);
-        //     document.getElementById('dailyDeductionTotal').value = total.toFixed(2);
-        //     updateTotalDeductions();
-        // }
-        // Function for Daily Deduction Calculation
-        function updateDailyDeduction() {
+        function calculateDailyDeduction() {
             const days = parseFloat(document.getElementById('dailyDeductionDays').value) || 0;
-            const rate = parseFloat(document.getElementById('dailyDeduction').value) || 0;
-            const total = days * rate;
+            const dailyRate = parseFloat(document.getElementById('dailySalary').textContent.replace('RM ', '')) || 0;
+            const total = days * dailyRate;
+            
+            document.getElementById('dailyDeduction').value = dailyRate.toFixed(2);
             document.getElementById('dailyDeductionTotal').value = total.toFixed(2);
-            
-            // Call your final voucher total function here
-            if (typeof calculateFinalTotal === "function") calculateFinalTotal();
+            updateTotalDeductions();
         }
 
-        // Function for Hours Deduction Calculation
-        function updateHoursDeduction() {
-            const hours = parseFloat(document.getElementById('hoursDeductionHours').value) || 0;
-            const rate = parseFloat(document.getElementById('hoursDeduction').value) || 0;
-            const total = hours * rate;
-            document.getElementById('hoursDeductionTotal').value = total.toFixed(2);
-            
-            // Call your final voucher total function here
-            if (typeof calculateFinalTotal === "function") calculateFinalTotal();
-        }
-
-        // Auto-calculate Daily Deduction Total based on manual input
-        document.getElementById('dailyDeductionDays').addEventListener('input', calcDailyTotal);
-        document.getElementById('dailyDeduction').addEventListener('input', calcDailyTotal);
-
-        function calcDailyTotal() {
-            const days = parseFloat(document.getElementById('dailyDeductionDays').value) || 0;
-            const rate = parseFloat(document.getElementById('dailyDeduction').value) || 0;
-            document.getElementById('dailyDeductionTotal').value = (days * rate).toFixed(2);
-            updateTotalDeductions(); // Refresh the main total
-        }
-
-        // Auto-calculate Hours Deduction Total
-        document.getElementById('hoursDeductionHours').addEventListener('input', calcHoursTotal);
-        document.getElementById('hoursDeduction').addEventListener('input', calcHoursTotal);
-
-        function calcHoursTotal() {
-            const hours = parseFloat(document.getElementById('hoursDeductionHours').value) || 0;
-            const rate = parseFloat(document.getElementById('hoursDeduction').value) || 0;
-            document.getElementById('hoursDeductionTotal').value = (hours * rate).toFixed(2);
-            updateTotalDeductions(); // Refresh the main total
-        }
-        function calculateFinalTotal() {
-            // 1. Get the values from your manual Total boxes
-            const manualDailyTotal = parseFloat(document.getElementById('dailyDeductionTotal').value) || 0;
-            const manualHoursTotal = parseFloat(document.getElementById('hoursDeductionTotal').value) || 0;
-
-            // 2. Sum them up for the "Total Deductions" line
-            const combinedDeductions = manualDailyTotal + manualHoursTotal;
-
-            // 3. Update the UI for Total Deductions RM
-            // Ensure this ID matches the one for "RM 297.78" in your voucher
-            document.getElementById('totalDeductionDisplay').textContent = combinedDeductions.toFixed(2);
-
-            // 4. Update the Net Salary
-            // Net Salary = (Basic + OT + Allowances) - combinedDeductions - EPF - SOCSO
-            updateNetSalary(combinedDeductions); 
-        }
         function calculateHoursDeduction() {
             const hours = parseFloat(document.getElementById('hoursDeductionHours').value) || 0;
             const hourlyRate = parseFloat(document.getElementById('hourlySalary').textContent.replace('RM ', '')) || 0;
@@ -3242,56 +3174,22 @@ function renderOvertimeUI() {
             document.getElementById('hoursDeductionTotal').value = total.toFixed(2);
             updateTotalDeductions();
         }
-/**
- * Calculates the sum of all deduction inputs and updates the UI.
- * This replaces the missing updateBTotalDeductions function.
-        */
+
+        // Update the updateTotalDeductions function to use the new total fields
         function updateTotalDeductions() {
-            // List of all input IDs that contribute to deductions
-            const deductionInputIds = [
-                'epfEmployee', 
-                'socso', 
-                'eis', 
-                'pcb', 
-                'advanceLoan',
-                'dailyDeductionTotal', 
-                'hoursDeductionTotal', 
-                'allowanceDeductions'
+            const deductionInputs = [
+                'epfEmployee', 'socso', 'eis', 'pcb', 'advanceLoan',
+                'dailyDeductionTotal', 'hoursDeductionTotal', 'allowanceDeductions'
             ];
             
-            // Sum up the values from each input field
-            const total = deductionInputIds.reduce((sum, id) => {
-                const element = document.getElementById(id);
-                const value = element ? parseFloat(element.value) : 0;
-                return sum + (isNaN(value) ? 0 : value);
+            const total = deductionInputs.reduce((sum, id) => {
+                const value = parseFloat(document.getElementById(id).value) || 0;
+                return sum + value;
             }, 0);
             
-            // Update the "(B) TOTAL DEDUCTIONS" display label
-            const totalDisplay = document.getElementById('totalDeductions');
-            if (totalDisplay) {
-                totalDisplay.textContent = `RM ${total.toFixed(2)}`;
-            }
-
-            // After updating deductions, recalculate the final Net Pay (A - B + C)
-            if (typeof updateNetPay === "function") {
-                updateNetPay();
-            }
+            document.getElementById('totalDeductions').textContent = `RM ${formatNumber(total)}`;
+            updateNetPay();
         }
-        // Update the updateTotalDeductions function to use the new total fields
-        // function updateTotalDeductions() {
-        //     const deductionInputs = [
-        //         'epfEmployee', 'socso', 'eis', 'pcb', 'advanceLoan',
-        //         'dailyDeductionTotal', 'hoursDeductionTotal', 'allowanceDeductions'
-        //     ];
-            
-        //     const total = deductionInputs.reduce((sum, id) => {
-        //         const value = parseFloat(document.getElementById(id).value) || 0;
-        //         return sum + value;
-        //     }, 0);
-            
-        //     document.getElementById('totalDeductions').textContent = `RM ${formatNumber(total)}`;
-        //     updateNetPay();
-        // }
         // Add event listeners for employer contribution inputs
 document.getElementById('employerEpf').addEventListener('input', updateTotalEmployerContribution);
 document.getElementById('employerSocso').addEventListener('input', updateTotalEmployerContribution);
@@ -3317,19 +3215,14 @@ async function loadSalaryFormulas() {
             window.salaryFormulas = snapshot.val();
             
             // Update formula displays using IDs
-            // Update formula displays using IDs that match your HTML
-            // document.getElementById('dailySalaryFormula').textContent = 
-            //     `(${window.salaryFormulas.dailySalary.formula})`;
-            // document.getElementById('hourlySalaryFormula').textContent = 
-            //     `(${window.salaryFormulas.hourlySalary.formula})`;
-
-            // // Changed from 'ot15Formula' to 'ot1_5'
-            // document.getElementById('ot1_5').textContent = 
-            //     `(${window.salaryFormulas.ot15.formula})`;
-
-            // // Changed from 'ot20Formula' to 'ot2_0'
-            // document.getElementById('ot2_0').textContent = 
-            //     `(${window.salaryFormulas.ot20.formula})`;
+            document.getElementById('dailySalaryFormula').textContent = 
+                `(${window.salaryFormulas.dailySalary.formula})`;
+            document.getElementById('hourlySalaryFormula').textContent = 
+                `(${window.salaryFormulas.hourlySalary.formula})`;
+            document.getElementById('ot15Formula').textContent = 
+                `(${window.salaryFormulas.ot15.formula})`;
+            document.getElementById('ot20Formula').textContent = 
+                `(${window.salaryFormulas.ot20.formula})`;
         } else {
             // Set default formulas if none exist
             window.salaryFormulas = {
@@ -3339,39 +3232,18 @@ async function loadSalaryFormulas() {
                 ot20: { formula: 'HOURLY*2.0' }
             };
             
-            // // Update formula displays with defaults
-            // document.getElementById('dailySalaryFormula').textContent = '(BASIC/45/4*9)';
-            // document.getElementById('hourlySalaryFormula').textContent = '(BASIC/45/4)';
-            // document.getElementById('ot15Formula').textContent = '(HOURLY*1.5)';
-            // document.getElementById('ot20Formula').textContent = '(HOURLY*2.0)';
+            // Update formula displays with defaults
+            document.getElementById('dailySalaryFormula').textContent = '(BASIC/45/4*9)';
+            document.getElementById('hourlySalaryFormula').textContent = '(BASIC/45/4)';
+            document.getElementById('ot15Formula').textContent = '(HOURLY*1.5)';
+            document.getElementById('ot20Formula').textContent = '(HOURLY*2.0)';
         }
     } catch (error) {
         console.error("Error loading salary formulas:", error);
         alert("Error loading salary formulas. Using default formulas.");
     }
 }
-// Function to update Deduction Totals
-function updateDeductionTotals() {
-    // Daily Calculation
-    const dailyDays = parseFloat(document.getElementById('dailyDeductionDays').value) || 0;
-    const dailyRate = parseFloat(document.getElementById('dailyDeduction').value) || 0;
-    document.getElementById('dailyDeductionTotal').value = (dailyDays * dailyRate).toFixed(2);
 
-    // Hourly Calculation
-    const hourlyHours = parseFloat(document.getElementById('hoursDeductionHours').value) || 0;
-    const hourlyRate = parseFloat(document.getElementById('hoursDeduction').value) || 0;
-    document.getElementById('hoursDeductionTotal').value = (hourlyHours * hourlyRate).toFixed(2);
-    
-    // Trigger the main salary recalculation if applicable
-    if (typeof calculateTotalSalary === "function") {
-        calculateTotalSalary();
-    }
-}
-
-// Add event listeners to all 4 input fields
-['dailyDeductionDays', 'dailyDeduction', 'hoursDeductionHours', 'hoursDeduction'].forEach(id => {
-    document.getElementById(id).addEventListener('input', updateDeductionTotals);
-});
 // Function to evaluate formula with variables
 function evaluateFormula(formula, variables) {
     try {
