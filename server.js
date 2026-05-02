@@ -34,12 +34,18 @@ const GMAIL_OAUTH_REDIRECT_URI =
         String(process.env.GMAIL_OAUTH_REDIRECT_URI).trim()) ||
     "https://developers.google.com/oauthplayground";
 
-const useGmailApi = Boolean(GMAIL_CLIENT_ID && GMAIL_CLIENT_SECRET && GMAIL_REFRESH_TOKEN && EMAIL_USER);
-const useResend = Boolean(RESEND_API_KEY) && !useGmailApi;
+const MAIL_PROVIDER = String(process.env.MAIL_PROVIDER || "auto").trim().toLowerCase();
+const forceGmailApi = MAIL_PROVIDER === "gmail";
+const forceResend = MAIL_PROVIDER === "resend";
 
-if (useGmailApi) {
+const useGmailApi = Boolean(GMAIL_CLIENT_ID && GMAIL_CLIENT_SECRET && GMAIL_REFRESH_TOKEN && EMAIL_USER);
+const useResend = Boolean(RESEND_API_KEY);
+const canUseGmailApi = useGmailApi && !forceResend;
+const canUseResend = useResend && !forceGmailApi;
+
+if (canUseGmailApi) {
     console.log("[mail] Using Gmail API (HTTPS) — From:", EMAIL_USER, "(matches Render; SMTP not used)");
-} else if (useResend) {
+} else if (canUseResend) {
     console.log(
         "[mail] Using Resend; From:",
         RESEND_FROM,
@@ -184,7 +190,7 @@ async function sendWithResend({ recipientEmail, recipientName, month, year, pdfB
 }
 
 let transporter = null;
-if (!useGmailApi && !useResend && EMAIL_USER && EMAIL_PASS) {
+if (!canUseGmailApi && !canUseResend && EMAIL_USER && EMAIL_PASS) {
     const nodemailer = require("nodemailer");
     transporter = nodemailer.createTransport({
         host: "smtp.gmail.com",
@@ -237,7 +243,7 @@ app.post("/api/send-email", async (req, res) => {
 
         const payload = { recipientEmail, recipientName, month, year, pdfBinary, fileName };
 
-        if (useGmailApi) {
+        if (canUseGmailApi) {
             try {
                 const data = await sendWithGmailApi(payload);
                 console.log("[mail] Gmail API sent id:", data && data.id, "→", recipientEmail);
@@ -246,7 +252,7 @@ app.post("/api/send-email", async (req, res) => {
                     messageId: (data && data.id) || null
                 });
             } catch (gmailErr) {
-                if (isInvalidGrantError(gmailErr) && RESEND_API_KEY) {
+                if (isInvalidGrantError(gmailErr) && canUseResend && !forceGmailApi) {
                     console.warn("[mail] Gmail OAuth invalid_grant. Falling back to Resend for this request.");
                     const data = await sendWithResend(payload);
                     return res.status(200).json({
@@ -259,7 +265,7 @@ app.post("/api/send-email", async (req, res) => {
             }
         }
 
-        if (useResend) {
+        if (canUseResend) {
             const data = await sendWithResend(payload);
             console.log("[mail] Resend sent id:", data && data.id, "→", recipientEmail);
             return res.status(200).json({
