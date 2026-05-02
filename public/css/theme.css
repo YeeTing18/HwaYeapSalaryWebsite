@@ -1,0 +1,309 @@
+/* Hwa Yeap — shared theme + in-app confirm dialog (no browser prompt) */
+
+[data-theme="dark"] {
+    color-scheme: dark;
+}
+
+/* ----- App confirm (Bootstrap-like, no JS dependency) ----- */
+#app-confirm-root {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1080;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+#app-confirm-root.app-confirm-visible {
+    display: flex;
+}
+
+.app-confirm-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(2px);
+}
+
+.app-confirm-dialog {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    z-index: 1;
+    animation: app-confirm-in 0.2s ease-out;
+}
+
+@keyframes app-confirm-in {
+    from {
+        opacity: 0;
+        transform: scale(0.96) translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.app-confirm-card {
+    background: var(--app-surface, #fff);
+    color: var(--app-text, #212529);
+    border-radius: 12px;
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.18);
+    border: 1px solid var(--app-border, rgba(0, 0, 0, 0.08));
+    overflow: hidden;
+}
+
+.app-confirm-title {
+    margin: 0;
+    padding: 1rem 1.25rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    border-bottom: 1px solid var(--app-border, rgba(0, 0, 0, 0.08));
+    background: var(--app-surface-2, #f8f9fa);
+}
+
+.app-confirm-body {
+    padding: 1.25rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.app-confirm-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem 1rem;
+    border-top: 1px solid var(--app-border, rgba(0, 0, 0, 0.08));
+    background: var(--app-surface-2, #f8f9fa);
+}
+
+.app-confirm-actions button {
+    min-width: 88px;
+    border-radius: 8px;
+    padding: 0.45rem 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    font-size: 0.9rem;
+}
+
+.app-confirm-cancel {
+    background: transparent;
+    color: var(--app-text, #333);
+    border-color: var(--app-border, #ced4da) !important;
+}
+
+.app-confirm-cancel:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.app-confirm-ok {
+    background: var(--app-primary, #8b0000);
+    color: #fff;
+    border-color: var(--app-primary, #8b0000);
+}
+
+.app-confirm-ok:hover {
+    filter: brightness(1.08);
+}
+
+/* Theme toggle (floating / toolbar) */
+.theme-toggle-btn {
+    border-radius: 8px !important;
+}
+
+/* ----- Dark mode surfaces ----- */
+:root {
+    --app-surface: #ffffff;
+    --app-surface-2: #f8f9fa;
+    --app-text: #212529;
+    --app-border: rgba(0, 0, 0, 0.1);
+    --app-primary: #8b0000;
+}
+
+[data-theme="dark"] {
+    --app-surface: #1e2635;
+    --app-surface-2: #252f42;
+    --app-text: #e8eaef;
+    --app-border: rgba(255, 255, 255, 0.1);
+    --app-primary: #c62828;
+}
+
+[data-theme="dark"] body {
+    background-color: #0f1419 !important;
+    color: #e6edf3 !important;
+}
+
+[data-theme="dark"] .card,
+[data-theme="dark"] .card-header,
+[data-theme="dark"] .card-body {
+    background-color: #1a2332 !important;
+    color: #e6edf3 !important;
+    border-color: #30363d !important;
+}
+
+[data-theme="dark"] .page-header {
+    background-color: #1a2332 !important;
+    color: #e6edf3 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+}
+
+[data-theme="dark"] .text-muted {
+    color: #9aa5b1 !important;
+}
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+    background-color: #252f42 !important;
+    color: #e8eaef !important;
+    border-color: #3d4f66 !important;
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+    background-color: #2d3a4f !important;
+    color: #fff !important;
+    border-color: #c62828 !important;
+    box-shadow: 0 0 0 0.2rem rgba(198, 40, 40, 0.25);
+}
+
+[data-theme="dark"] .table {
+    color: #e6edf3 !important;
+    border-color: #30363d !important;
+}
+
+[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+[data-theme="dark"] .modal-content {
+    background-color: #1e2635 !important;
+    color: #e8eaef !important;
+    border-color: #30363d !important;
+}
+
+[data-theme="dark"] .btn-outline-secondary {
+    color: #cbd5e1 !important;
+    border-color: #4a5568 !important;
+}
+
+[data-theme="dark"] .btn-outline-secondary:hover {
+    background: #30363d !important;
+    color: #fff !important;
+}
+
+[data-theme="dark"] .btn-light {
+    background: #30363d !important;
+    color: #e8eaef !important;
+    border-color: #4a5568 !important;
+}
+
+[data-theme="dark"] #content {
+    background: transparent;
+}
+
+[data-theme="dark"] .toggle-sidebar {
+    background: #30363d !important;
+    color: #e8eaef !important;
+    border: 1px solid #4a5568 !important;
+}
+
+[data-theme="dark"] .toggle-sidebar:hover {
+    background: #3d4f66 !important;
+}
+
+/* Voucher-style blocks */
+[data-theme="dark"] .voucher-container {
+    background-color: #1a2332 !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45) !important;
+}
+
+[data-theme="dark"] .employee-info,
+[data-theme="dark"] .signature-section {
+    background-color: #252f42 !important;
+    border-color: #30363d !important;
+}
+
+[data-theme="dark"] .info-label,
+[data-theme="dark"] .detail-label {
+    color: #b8c5d3 !important;
+}
+
+[data-theme="dark"] .detail-value {
+    color: #e8eaef !important;
+}
+
+[data-theme="dark"] .earnings,
+[data-theme="dark"] .deductions {
+    background-color: #1e2635 !important;
+    border-color: #30363d !important;
+}
+
+[data-theme="dark"] .deductions {
+    border-left-color: #4a5568 !important;
+}
+
+[data-theme="dark"] .net-pay {
+    background-color: #252032 !important;
+    border-color: #4a3760 !important;
+}
+
+[data-theme="dark"] .salary-calculations[style*="FFF0F0"],
+[data-theme="dark"] div[style*="FFF0F0"] {
+    background-color: #2a2230 !important;
+}
+
+[data-theme="dark"] .login-container {
+    background-color: #1e2635 !important;
+    color: #e8eaef !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45) !important;
+}
+
+[data-theme="dark"] .company-address {
+    color: #9aa5b1 !important;
+}
+
+[data-theme="dark"] .alert-danger {
+    background-color: #3d2020 !important;
+    border-color: #7f2d2d !important;
+    color: #fecaca !important;
+}
+
+[data-theme="dark"] .list-group-item {
+    background-color: #252f42 !important;
+    color: #e8eaef !important;
+    border-color: #30363d !important;
+}
+
+[data-theme="dark"] .input-group-text {
+    background-color: #30363d !important;
+    color: #e8eaef !important;
+    border-color: #4a5568 !important;
+}
+
+[data-theme="dark"] .formula-preview {
+    background-color: #252f42 !important;
+    color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .remark-section {
+    background: linear-gradient(135deg, #252f42, #1a2230) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35) !important;
+}
+
+[data-theme="dark"] .remark-title {
+    color: #93c5fd !important;
+}
+
+[data-theme="dark"] .remark-subtitle {
+    color: #9aa5b1 !important;
+}
+
+@media print {
+    .theme-toggle-btn,
+    #app-confirm-root {
+        display: none !important;
+    }
+}
+
