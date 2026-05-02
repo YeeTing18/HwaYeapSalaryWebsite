@@ -1,6 +1,5 @@
 const express = require("express");
 const path = require("path");
-const nodemailer = require("nodemailer");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 require("dotenv").config({ path: path.join(__dirname, ".env") });
@@ -10,28 +9,37 @@ app.use(cors());
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
 
-// ✅ Serve Static Files from `public/`
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "login.html")); // Main Page
+    res.sendFile(path.join(__dirname, "public", "login.html"));
 });
+
+const RESEND_API_KEY = process.env.RESEND_API_KEY && String(process.env.RESEND_API_KEY).trim();
+const RESEND_FROM =
+    (process.env.RESEND_FROM && String(process.env.RESEND_FROM).trim()) ||
+    "Hwa Yeap Engineering <onboarding@resend.dev>";
 
 const EMAIL_USER = process.env.EMAIL_USER && String(process.env.EMAIL_USER).trim();
 const EMAIL_PASS = process.env.EMAIL_PASS && String(process.env.EMAIL_PASS).replace(/\s+/g, "").trim();
 
-if (!EMAIL_USER || !EMAIL_PASS) {
-    console.warn(
-        "[mail] EMAIL_USER / EMAIL_PASS are missing. Set them in Render: Environment tab (this app does not read public/.env). " +
-            "Local: use HWAYEAP/.env next to server.js."
+/** Prefer Resend on hosts (e.g. Render) where outbound SMTP to Gmail is blocked (ETIMEDOUT). */
+const useResend = Boolean(RESEND_API_KEY);
+
+if (useResend) {
+    console.log("[mail] Using Resend API over HTTPS (works on Render). From:", RESEND_FROM.split("<").pop().replace(">", ""));
+    console.log(
+        "[mail] Tip: Verify your own domain in Resend and set RESEND_FROM to e.g. Hwa Yeap Engineering <noreply@yourdomain.com>. " +
+            "onboarding@resend.dev only allows sending to approved test addresses."
     );
+} else if (EMAIL_USER && EMAIL_PASS) {
+    console.log("[mail] Using Gmail SMTP (OK on local PCs; often blocked on cloud hosts). Sender:", EMAIL_USER);
 } else {
-    console.log("[mail] SMTP sender configured:", EMAIL_USER);
+    console.warn(
+        "[mail] No mail configured. On Render add RESEND_API_KEY (+ RESEND_FROM after domain verify). Local dev can use EMAIL_USER / EMAIL_PASS for SMTP."
+    );
 }
 
-/**
- * Accept data URI from html2pdf (`data:application/pdf;base64,...`) or raw base64.
- */
 function pdfBufferFromClient(input) {
     if (typeof input !== "string" || !input.trim()) {
         throw new Error("Invalid or empty pdfBuffer");
@@ -39,8 +47,7 @@ function pdfBufferFromClient(input) {
     const trimmed = input.trim();
     const marker = "base64,";
     const idx = trimmed.indexOf(marker);
-    const b64 =
-        idx !== -1 ? trimmed.slice(idx + marker.length) : trimmed;
+    const b64 = idx !== -1 ? trimmed.slice(idx + marker.length) : trimmed;
     const buf = Buffer.from(b64, "base64");
     if (!buf.length) {
         throw new Error("Decoded PDF attachment is empty (check PDF generation)");
@@ -61,25 +68,71 @@ function formatMailError(error) {
     return parts.join(" | ");
 }
 
-// ✅ Gmail SMTP — use App Password (Google Account → Security → 2-Step Verification → App passwords)
-const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    requireTLS: true,
-    auth: {
-        user: EMAIL_USER,
-        pass: EMAIL_PASS
-    }
-});
+let transporter = null;
+if (!useResend && EMAIL_USER && EMAIL_PASS) {
+    const nodemailer = require("nodemailer");
+    transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        requireTLS: true,
+        auth: {
+            user: EMAIL_USER,
+            pass: EMAIL_PASS
+        }
+    });
+    transporter.verify((error) => {
+        if (error) {
+            console.error("[mail] SMTP verify failed:", formatMailError(error));
+        } else {
+            console.log("[mail] SMTP server is ready");
+        }
+    });
+}
 
-transporter.verify((error) => {
+async function sendWithResend({ recipientEmail, recipientName, month, year, pdfBinary, fileName }) {
+    const { Resend } = require("resend");
+    const resend = new Resend(RESEND_API_KEY);
+    const text =
+        `Dear ${recipientName},\n\nPlease find attached your salary voucher for ${month} ${year}.\n\nBest regards,\nHwa Yeap Engineering`;
+
+    const { data, error } = await resend.emails.send({
+        from: RESEND_FROM,
+        to: recipientEmail,
+        subject: `Salary Voucher for ${month} ${year}`,
+        text,
+        attachments: [
+            {
+                filename: fileName,
+                content: pdfBinary.toString("base64"),
+                contentType: "application/pdf"
+            }
+        ]
+    });
+
     if (error) {
-        console.error("[mail] SMTP verify failed:", formatMailError(error));
-    } else {
-        console.log("[mail] SMTP server is ready to send emails");
+        const msg =
+            typeof error.message === "string"
+                ? error.message
+                : JSON.stringify(error);
+        throw new Error(msg || "Resend API rejected the send");
     }
-});
+    return data;
+}
+
+async function sendWithSmtp({ recipientEmail, recipientName, month, year, pdfBinary, fileName }) {
+    await transporter.sendMail({
+        from: {
+            name: "Hwa Yeap Engineering",
+            address: EMAIL_USER
+        },
+        to: recipientEmail,
+        subject: `Salary Voucher for ${month} ${year}`,
+        text:
+            `Dear ${recipientName},\n\nPlease find attached your salary voucher for ${month} ${year}.\n\nBest regards,\nHwa Yeap Engineering`,
+        attachments: [{ filename: fileName, content: pdfBinary, contentType: "application/pdf" }]
+    });
+}
 
 app.post("/api/send-email", async (req, res) => {
     try {
@@ -89,53 +142,44 @@ app.post("/api/send-email", async (req, res) => {
             return res.status(400).json({ error: "Missing required fields" });
         }
 
-        if (!EMAIL_USER || !EMAIL_PASS) {
-            console.error("[mail] Reject send: EMAIL_USER / EMAIL_PASS not configured on server");
+        if (!useResend && (!EMAIL_USER || !EMAIL_PASS || !transporter)) {
             return res.status(503).json({
                 error: "Email is not configured on the server",
-                details: "Set EMAIL_USER and EMAIL_PASS in Render → Environment (Gmail App Password, no spaces). Redeploy if needed."
+                details:
+                    "On Render, outbound SMTP to Gmail usually times out — set RESEND_API_KEY and RESEND_FROM in Environment. Local: set EMAIL_USER and EMAIL_PASS (Gmail App Password)."
             });
         }
 
-        let pdfAttachment;
+        let pdfBinary;
         try {
-            pdfAttachment = pdfBufferFromClient(pdfBuffer);
+            pdfBinary = pdfBufferFromClient(pdfBuffer);
         } catch (decodeErr) {
             console.error("[mail] PDF decode error:", decodeErr.message);
             return res.status(400).json({ error: "Invalid PDF attachment", details: decodeErr.message });
         }
 
-        const mailOptions = {
-            from: {
-                name: "Hwa Yeap Engineering",
-                address: EMAIL_USER
-            },
-            to: recipientEmail,
-            subject: `Salary Voucher for ${month} ${year}`,
-            text:
-                `Dear ${recipientName},\n\nPlease find attached your salary voucher for ${month} ${year}.\n\nBest regards,\nHwa Yeap Engineering`,
-            attachments: [
-                {
-                    filename: fileName,
-                    content: pdfAttachment,
-                    contentType: "application/pdf"
-                }
-            ]
-        };
+        const payload = { recipientEmail, recipientName, month, year, pdfBinary, fileName };
 
-        const info = await transporter.sendMail(mailOptions);
-        console.log("[mail] sent:", info.messageId, "→", recipientEmail);
+        if (useResend) {
+            const data = await sendWithResend(payload);
+            console.log("[mail] Resend sent id:", data && data.id, "→", recipientEmail);
+            return res.status(200).json({
+                message: "Email sent successfully",
+                messageId: (data && data.id) || null
+            });
+        }
 
-        res.status(200).json({
-            message: "Email sent successfully",
-            messageId: info.messageId
+        await sendWithSmtp(payload);
+        console.log("[mail] SMTP sent →", recipientEmail);
+        return res.status(200).json({
+            message: "Email sent successfully"
         });
     } catch (error) {
         const detail = formatMailError(error);
-        console.error("[mail] sendMail failed:", detail);
+        console.error("[mail] send failed:", detail);
         if (error && error.stack) console.error(error.stack);
 
-        res.status(500).json({
+        return res.status(500).json({
             error: "Failed to send email",
             details: error.message || detail
         });
