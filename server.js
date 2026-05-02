@@ -84,6 +84,20 @@ function formatMailError(error) {
     return parts.join(" | ");
 }
 
+function isInvalidGrantError(error) {
+    if (!error) return false;
+    const msg = String(error.message || "").toLowerCase();
+    if (msg.includes("invalid_grant")) return true;
+    if (Array.isArray(error.errors)) {
+        return error.errors.some((e) =>
+            String((e && (e.message || e.reason || e.error)) || "")
+                .toLowerCase()
+                .includes("invalid_grant")
+        );
+    }
+    return false;
+}
+
 /** Gmail API expects RFC 822 as base64url. */
 function toGmailRaw(mimeBuf) {
     return mimeBuf
@@ -224,12 +238,25 @@ app.post("/api/send-email", async (req, res) => {
         const payload = { recipientEmail, recipientName, month, year, pdfBinary, fileName };
 
         if (useGmailApi) {
-            const data = await sendWithGmailApi(payload);
-            console.log("[mail] Gmail API sent id:", data && data.id, "→", recipientEmail);
-            return res.status(200).json({
-                message: "Email sent successfully",
-                messageId: (data && data.id) || null
-            });
+            try {
+                const data = await sendWithGmailApi(payload);
+                console.log("[mail] Gmail API sent id:", data && data.id, "→", recipientEmail);
+                return res.status(200).json({
+                    message: "Email sent successfully",
+                    messageId: (data && data.id) || null
+                });
+            } catch (gmailErr) {
+                if (isInvalidGrantError(gmailErr) && RESEND_API_KEY) {
+                    console.warn("[mail] Gmail OAuth invalid_grant. Falling back to Resend for this request.");
+                    const data = await sendWithResend(payload);
+                    return res.status(200).json({
+                        message: "Email sent successfully",
+                        messageId: (data && data.id) || null,
+                        via: "resend-fallback"
+                    });
+                }
+                throw gmailErr;
+            }
         }
 
         if (useResend) {
