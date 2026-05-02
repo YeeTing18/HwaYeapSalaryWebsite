@@ -4,8 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Intern Salary Voucher</title>
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('hwayeap-theme');
+                if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+                else if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+                else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/theme.css">
     <style>
         /* Use the same styles as main.html for consistency */
         :root {
@@ -49,6 +62,13 @@
         .voucher-container { background-color: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); overflow: hidden; }
         .voucher-header { background: linear-gradient(to right, var(--primary), var(--secondary)); color: white; padding: 20px; text-align: center; position: relative; }
         .voucher-header h2 { font-size: 1.8rem; letter-spacing: 1px; margin-bottom: 5px; }
+        /* Header inherits white text; form controls use white backgrounds — force dark text or selection looks blank */
+        .voucher-header .form-select,
+        .voucher-header .form-control {
+            color: #212529;
+            background-color: #fff;
+            border-color: rgba(0, 0, 0, 0.175);
+        }
         .employee-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; padding: 25px; background-color: #f5f5f5; border-bottom: 2px dashed #e0e0e0; }
         .info-group { margin-bottom: 10px; }
         .info-label { font-weight: 600; color: #37474f; display: inline-block; width: 120px; }
@@ -194,9 +214,14 @@
         </div>
         <!-- Main Content -->
         <div id="content">
-            <button class="toggle-sidebar">
-                <i class="fas fa-bars"></i>
-            </button>
+            <div class="d-flex align-items-center gap-2 flex-wrap mb-3">
+                <button type="button" class="toggle-sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary theme-toggle-btn" data-theme-toggle title="Toggle dark mode">
+                    <i class="fas fa-moon theme-toggle-icon"></i>
+                </button>
+            </div>
             <div class="page-header">
                 <h1 class="h3 mb-0">Intern Salary Voucher</h1>
                 <p class="mb-0">View and manage intern salary details</p>
@@ -273,14 +298,14 @@
                                 <div class="col-md-3">
                                     <div class="calculation-item">
                                         <div class="calculation-label" style="font-weight: 600; color: var(--primary);">日薪 SALARY PER DAYS</div>
-                                        <div class="calculation-formula" id="dailySalaryFormula" style="font-size: 0.9rem; color: #666;">(Loading...)</div>
+                                        <div class="calculation-formula" id="dailyFormula" style="font-size: 0.9rem; color: #666;">(Loading...)</div>
                                         <div class="calculation-value" id="dailySalary" style="font-weight: 600; color: var(--primary);">RM 0.00</div>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
                                     <div class="calculation-item">
                                         <div class="calculation-label" style="font-weight: 600; color: var(--primary);">时薪 SALARY PER HOURS</div>
-                                        <div class="calculation-formula" id="hourlySalaryFormula" style="font-size: 0.9rem; color: #666;">(Loading...)</div>
+                                        <div class="calculation-formula" id="hourlyFormula" style="font-size: 0.9rem; color: #666;">(Loading...)</div>
                                         <div class="calculation-value" id="hourlySalary" style="font-weight: 600; color: var(--primary);">RM 0.00</div>
                                     </div>
                                 </div>
@@ -288,14 +313,14 @@
                                     <div class="calculation-item">
                                         <div class="calculation-label" style="font-weight: 600; color: var(--primary);">OT-1.5</div>
                                         <div class="calculation-formula" id="ot15Formula" style="font-size: 0.9rem; color: #666;">(Loading...)</div>
-                                        <div class="calculation-value" id="ot1_5" style="font-weight: 600; color: var(--primary);">RM 0.00</div>
+                                        <div class="calculation-value" id="ot15Rate" style="font-weight: 600; color: var(--primary);">RM 0.00</div>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
                                     <div class="calculation-item">
                                         <div class="calculation-label" style="font-weight: 600; color: var(--primary);">OT-2.0</div>
                                         <div class="calculation-formula" id="ot20Formula" style="font-size: 0.9rem; color: #666;">(Loading...)</div>
-                                        <div class="calculation-value" id="ot2_0" style="font-weight: 600; color: var(--primary);">RM 0.00</div>
+                                        <div class="calculation-value" id="ot20Rate" style="font-weight: 600; color: var(--primary);">RM 0.00</div>
                                     </div>
                                 </div>
                             </div>
@@ -309,11 +334,11 @@
                                     <div class="earnings">
                                         <h3 class="section-title">Earnings</h3>
                                         <div class="detail-row">
-                                            <span class="detail-label" >COMMISSIONS 佣金</span>
+                                            <span class="detail-label">ALLOWANCE 津贴</span>
                                             <span class="detail-value" id="basicPay">RM 0.00</span>
                                         </div>
                                         <div class="detail-row">
-                                            <span class="detail-label" id="payLabel2">COMMISSIONS2 佣金2</span>
+                                            <span class="detail-label">OVERTIME 超时</span>
                                             <div class="overtime-inputs" style="display: flex; gap: 10px; align-items: center;">
                                                 <input type="number" class="form-control form-control-sm" id="otHours" style="width: 80px;" min="0" step="0.5" placeholder="Hours">
                                                 <select class="form-select form-select-sm" id="otMultiplier" style="width: 100px;">
@@ -327,7 +352,7 @@
                                         </div>
                                         <div id="overtimeList" style="margin-left: 20px; margin-top: 10px;"></div>
                                         <div class="detail-row" id="totalOvertimeRow" style="display: none;">
-                                            <span class="detail-label">Total COMMISSIONS</span>
+                                            <span class="detail-label">Total Overtime</span>
                                             <span class="detail-value" id="totalOvertime">RM 0.00</span>
                                         </div>
                                         <div class="total-row gross-total">
@@ -352,22 +377,24 @@
                                         </div>
                                         <div class="detail-row">
                                             <span class="detail-label">DAILY DEDUCTION 每日扣除</span>
-                                            <div class="input-group input-group-sm" style="width: 300px;">
-                                                <input type="number" class="form-control" id="deductionDays" min="0" step="0.5" placeholder="Days" style="width: 80px;">
+                                            <div class="input-group input-group-sm flex-wrap" style="max-width: 420px;">
+                                                <input type="number" class="form-control" id="deductionDays" min="0" step="0.5" placeholder="Days" style="width: 72px; max-width: 90px;">
                                                 <span class="input-group-text">×</span>
-                                                <span class="input-group-text" id="dailyRate">RM 0.00</span>
+                                                <span class="input-group-text">RM</span>
+                                                <input type="number" class="form-control" id="deductionDailyRate" min="0" step="0.01" placeholder="Rate / day" title="Enter deduction rate per day (manual)">
                                                 <span class="input-group-text">=</span>
                                                 <input type="number" class="form-control" id="dailyDeduction" min="0" step="0.01" value="0.00" readonly>
                                             </div>
                                         </div>
                                         <div class="detail-row">
                                             <span class="detail-label">HOURS DEDUCTION 小时扣除</span>
-                                            <div class="input-group input-group-sm" style="width: 300px;">
-                                                <input type="number" class="form-control" id="deductionHours" min="0" step="0.5" placeholder="Hours" style="width: 80px;">
+                                            <div class="input-group input-group-sm flex-wrap" style="max-width: 420px;">
+                                                <input type="number" class="form-control" id="deductionHours" min="0" step="0.5" placeholder="Hours" style="width: 72px; max-width: 90px;">
                                                 <span class="input-group-text">×</span>
-                                                <span class="input-group-text" id="hourlyRate">RM 0.00</span>
+                                                <span class="input-group-text">RM</span>
+                                                <input type="number" class="form-control" id="deductionHourlyRate" min="0" step="0.01" placeholder="Rate / hour" title="Enter deduction rate per hour (manual)">
                                                 <span class="input-group-text">=</span>
-                                                <input type="number" class="form-control" id="hoursDeduction" min="0" step="0.01" value="0.00" readonl style="width: 50px;">
+                                                <input type="number" class="form-control" id="hoursDeduction" min="0" step="0.01" value="0.00" readonly>
                                             </div>
                                         </div>
                                         <div class="total-row deductions-total">
@@ -416,17 +443,8 @@
                                 <!-- Right Column (4/12) -->
                                 <div class="col-md-4">
                                     <!-- Signature Section with sticky positioning -->
-                                    <div class="signature-section" style="position: sticky; top: 20px;">
                                         <div class="signature-group">
-                                            <div class="signature-label">APPROVED BY 批准者</div>
-                                            <div class="signature-box">Chong</div>
-                                        </div>
-                                        <div class="signature-group">
-                                            <div class="signature-label">INTERN SIGNATURE 实习生签名</div>
-                                            <div class="signature-box">-</div>
-                                        </div>
-                                        <div class="signature-group">
-                                            <div class="signature-label">Company Stamp</div>
+                                            <div class="signature-label">Approved and Issued By</div>
                                             <div class="signature-box" style="height: 120px; padding: 10px;">
                                                 <img src="hwaYeapStamp.png" alt="Company Stamp" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                                             </div>
@@ -456,11 +474,21 @@
             </footer>
         </div>
     </div>
+    <script src="js/app-theme.js"></script>
     <!-- Add your JavaScript here, similar to main.html but only for the relevant fields -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, onValue, get, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        // import { getDatabase, ref, onValue, get, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        // Correct Firestore imports for doc, getDoc, and collection
+        import { 
+            getFirestore, 
+            doc, 
+            getDoc, 
+            collection, 
+            onSnapshot 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+       import { getDatabase, ref, onValue, get, set, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         const firebaseConfig = {
             apiKey: "AIzaSyAEdrpzI8RsyuN7LrlGvWVF6FaMmfIcADU",
             authDomain: "hwayeap-1db99.firebaseapp.com",
@@ -509,6 +537,22 @@
             const total = advanceLoan + dailyDeduction + hoursDeduction;
             document.getElementById('totalDeductions').textContent = `RM ${formatNumber(total)}`;
             updateNetPay();
+        }
+
+        function recalcDailyDeductionLine() {
+            const days = parseFloat(document.getElementById('deductionDays').value) || 0;
+            const rate = parseFloat(document.getElementById('deductionDailyRate').value) || 0;
+            const deduction = truncateToTwoDecimals(days * rate);
+            document.getElementById('dailyDeduction').value = formatNumber(deduction);
+            updateTotalDeductions();
+        }
+
+        function recalcHoursDeductionLine() {
+            const hours = parseFloat(document.getElementById('deductionHours').value) || 0;
+            const rate = parseFloat(document.getElementById('deductionHourlyRate').value) || 0;
+            const deduction = truncateToTwoDecimals(hours * rate);
+            document.getElementById('hoursDeduction').value = formatNumber(deduction);
+            updateTotalDeductions();
         }
 
         function updateTotalAdditions() {
@@ -564,18 +608,37 @@
                     if (salaryData.salaryCalculations) {
                         document.getElementById('dailySalary').textContent = `RM ${formatNumber(salaryData.salaryCalculations.dailySalary || 0)}`;
                         document.getElementById('hourlySalary').textContent = `RM ${formatNumber(salaryData.salaryCalculations.hourlySalary || 0)}`;
-                        document.getElementById('ot1_5').textContent = `RM ${formatNumber(salaryData.salaryCalculations.ot1_5Rate || 0)}`;
-                        document.getElementById('ot2_0').textContent = `RM ${formatNumber(salaryData.salaryCalculations.ot2_0Rate || 0)}`;
+                        document.getElementById('ot15Rate').textContent = `RM ${formatNumber(salaryData.salaryCalculations.ot1_5Rate || 0)}`;
+                        document.getElementById('ot20Rate').textContent = `RM ${formatNumber(salaryData.salaryCalculations.ot2_0Rate || 0)}`;
                     }
                     
                     // Deductions - Add null checks
                     if (salaryData.deductions) {
-                        document.getElementById('advanceLoan').value = salaryData.deductions.advanceLoan || 0;
-                        document.getElementById('advanceLoanType').value = salaryData.deductions.advanceLoanType || '';
-                        document.getElementById('dailyDeduction').value = salaryData.deductions.dailyDeduction || 0;
-                        document.getElementById('deductionDays').value = salaryData.deductions.deductionDays || 0;
-                        document.getElementById('hoursDeduction').value = salaryData.deductions.hoursDeduction || 0;
-                        document.getElementById('deductionHours').value = salaryData.deductions.deductionHours || 0;
+                        const d = salaryData.deductions;
+                        document.getElementById('advanceLoan').value = d.advanceLoan || 0;
+                        document.getElementById('advanceLoanType').value = d.advanceLoanType || '';
+                        document.getElementById('dailyDeduction').value = d.dailyDeduction || 0;
+                        document.getElementById('deductionDays').value = d.deductionDays || 0;
+                        document.getElementById('hoursDeduction').value = d.hoursDeduction || 0;
+                        document.getElementById('deductionHours').value = d.deductionHours || 0;
+                        const dDays = parseFloat(d.deductionDays) || 0;
+                        const dHours = parseFloat(d.deductionHours) || 0;
+                        if (d.deductionDailyRate != null && d.deductionDailyRate !== '') {
+                            document.getElementById('deductionDailyRate').value = d.deductionDailyRate;
+                        } else if (dDays > 0) {
+                            const amt = parseFloat(d.dailyDeduction) || 0;
+                            document.getElementById('deductionDailyRate').value = amt > 0 ? String(truncateToTwoDecimals(amt / dDays)) : '';
+                        } else {
+                            document.getElementById('deductionDailyRate').value = '';
+                        }
+                        if (d.deductionHourlyRate != null && d.deductionHourlyRate !== '') {
+                            document.getElementById('deductionHourlyRate').value = d.deductionHourlyRate;
+                        } else if (dHours > 0) {
+                            const amt = parseFloat(d.hoursDeduction) || 0;
+                            document.getElementById('deductionHourlyRate').value = amt > 0 ? String(truncateToTwoDecimals(amt / dHours)) : '';
+                        } else {
+                            document.getElementById('deductionHourlyRate').value = '';
+                        }
                     } else {
                         console.log('No deductions data found');
                         // Reset deduction fields
@@ -585,6 +648,8 @@
                         document.getElementById('deductionDays').value = 0;
                         document.getElementById('hoursDeduction').value = 0;
                         document.getElementById('deductionHours').value = 0;
+                        document.getElementById('deductionDailyRate').value = '';
+                        document.getElementById('deductionHourlyRate').value = '';
                     }
                     
                     // Clear and update overtime entries
@@ -691,95 +756,145 @@
             }
 
             // Load interns into dropdown
+            // Ensure these are your RTDB imports
+           
+
+            const database = getDatabase(app);
+
             function loadInterns() {
-                const employeeSelect = document.getElementById('employeeSelect');
+                const internSelect = document.getElementById('employeeSelect');
                 const employeesRef = ref(database, 'Employee');
+                
                 onValue(employeesRef, (snapshot) => {
-                    while (employeeSelect.options.length > 1) {
-                        employeeSelect.remove(1);
-                    }
+                    internSelect.innerHTML = '<option value="">Select Intern...</option>';
                     snapshot.forEach((childSnapshot) => {
-                        const internName = childSnapshot.key;
-                        const internData = childSnapshot.val();
-                        if (internData.position === 'Intern') {
+                        const data = childSnapshot.val();
+                        if (data.position === "Intern") {
                             const option = document.createElement('option');
-                            option.value = internName;
-                            option.textContent = internName;
-                            employeeSelect.appendChild(option);
+                            option.value = childSnapshot.key;
+                            const label = (data.name && String(data.name).trim()) || childSnapshot.key || '—';
+                            option.textContent = label;
+                            internSelect.appendChild(option);
                         }
                     });
                 });
             }
             loadInterns();
-
             // When intern is selected, show details and bank acc in signature
-            document.getElementById('employeeSelect').addEventListener('change', function(e) {
-                const selectedIntern = e.target.value;
-                if (selectedIntern) {
-                    const internRef = ref(database, `Employee/${selectedIntern}`);
-                    get(internRef).then((snapshot) => {
-                        if (snapshot.exists()) {
-                            const internData = snapshot.val();
-                            document.getElementById('icNumber').textContent = internData.icNumber || '-';
-                            document.getElementById('bankAccount').textContent = internData.bankAccount || '-';
-                            document.querySelectorAll('.signature-group')[1].querySelector('.signature-box').textContent = internData.bankAccount || '-';
-                            
-                            let allowance = 0;
-                            // Note: Ensure your Firebase 'Employee' records use 'basicPay' or update to 'allowance'
-                            if (internData.basicPay !== undefined || internData.allowance !== undefined) {
-                                allowance = Number(internData.basicPay || internData.allowance || 0);
-                            }
-                            document.getElementById('basicPay').textContent = `RM ${formatNumber(allowance)}`;
-
-                            const variables = {
-                                BASIC: allowance // Keeping 'BASIC' here so your formulas (e.g., BASIC/45/4) don't break
-                            };
-
-                            // First calculate hourly salary
-                            const hourlySalary = truncateToTwoDecimals(evaluateFormula(window.salaryFormulas.hourlySalary.formula, variables));
-                            document.getElementById('hourlySalary').textContent = `RM ${formatNumber(hourlySalary)}`;
-
-                            // Add hourly rate to variables for other calculations
-                            variables.HOURLY = hourlySalary;
-
-                            // Calculate daily salary using hourly rate
-                            const dailySalary = truncateToTwoDecimals(evaluateFormula(window.salaryFormulas.dailySalary.formula, variables));
-                            document.getElementById('dailySalary').textContent = `RM ${formatNumber(dailySalary)}`;
-
-                            // Calculate OT rates using hourly rate
-                            variables.HOURS = 1; // Set to 1 to get the rate per hour
-                            const ot1_5Rate = truncateToTwoDecimals(evaluateFormula(window.salaryFormulas.ot15.formula, variables));
-                            const ot2_0Rate = truncateToTwoDecimals(evaluateFormula(window.salaryFormulas.ot20.formula, variables));
-
-                            document.getElementById('ot1_5').textContent = `RM ${formatNumber(ot1_5Rate)}`;
-                            document.getElementById('ot2_0').textContent = `RM ${formatNumber(ot2_0Rate)}`;
-
-                            updateGrossPay();
-                        } else {
-                            resetInternFields();
-                        }
-                    }).catch(() => {
-                        resetInternFields();
-                    });
-                } else {
-                    resetInternFields();
-                }
-            });
-
-            function resetInternFields() {
-                document.getElementById('icNumber').textContent = '-';
-                document.getElementById('bankAccount').textContent = '-';
-                document.querySelectorAll('.signature-group')[1].querySelector('.signature-box').textContent = '-';
-                document.getElementById('basicPay').textContent = 'RM 0.00';
+// Add Event Listener for Employee Selection
+document.getElementById('employeeSelect').addEventListener('change', function(e) {
+    const selectedInternId = e.target.value;
+    
+    if (selectedInternId) {
+        // --- THIS LINE FIXES THE ERROR ---
+        // We create the reference here using the selected ID
+        const internRef = ref(database, 'Employee/' + selectedInternId);
+        
+        // Now internRef is defined and can be used below
+        get(internRef).then((snapshot) => {
+            if (snapshot.exists()) {
+                const data = snapshot.val();
                 
-                // Reset salary calculations
-                document.getElementById('dailySalary').textContent = 'RM 0.00';
-                document.getElementById('hourlySalary').textContent = 'RM 0.00';
-                document.getElementById('ot1_5').textContent = 'RM 0.00';
-                document.getElementById('ot2_0').textContent = 'RM 0.00';
+                // Update basic profile info
+                document.getElementById('icNumber').textContent = data.icNumber || '-';
+                document.getElementById('bankAccount').textContent = data.bankAccount || '-';
                 
-                updateGrossPay();
+                // INTERN SPECIFIC: Use allowance as 'BASIC'
+                const basePay = parseFloat(data.allowance || data.basicPay) || 0;
+                document.getElementById('basicPay').textContent = `RM ${basePay.toFixed(2)}`;
+
+                // 1. Calculate Rates using Formulas from Firebase
+                const dailyAmt = evaluateFormula(data.dailyFormula || "(BASIC/26)", { BASIC: basePay });
+                const hourlyAmt = evaluateFormula(data.hourlyFormula || "(BASIC/26/8)", { BASIC: basePay, DAILY: dailyAmt });
+                const ot15Amt = evaluateFormula(data.ot15Formula || "(HOURLY*1.5)", { HOURLY: hourlyAmt });
+                const ot20Amt = evaluateFormula(data.ot20Formula || "(HOURLY*2.0)", { HOURLY: hourlyAmt });
+
+                // 2. Update UI Formula Labels (The text labels)
+                document.getElementById('dailyFormula').textContent = `Formula: ${data.dailyFormula || '(BASIC/26)'}`;
+                document.getElementById('hourlyFormula').textContent = `Formula: ${data.hourlyFormula || '(BASIC/26/8)'}`;
+                document.getElementById('ot15Formula').textContent = data.ot15Formula || '(HOURLY*1.5)';
+                document.getElementById('ot20Formula').textContent = data.ot20Formula || '(HOURLY*2.0)';
+
+                // 3. Update UI RM Values (The total amounts)
+                document.getElementById('dailySalary').textContent = `RM ${dailyAmt.toFixed(2)}`;
+                document.getElementById('hourlySalary').textContent = `RM ${hourlyAmt.toFixed(2)}`;
+                document.getElementById('ot15Rate').textContent = `RM ${ot15Amt.toFixed(2)}`;
+                document.getElementById('ot20Rate').textContent = `RM ${ot20Amt.toFixed(2)}`;
+                
+                // Store globally for the "Add OT" button
+                window.currentHourlyRate = hourlyAmt;
+
+                if (typeof updateGrossPay === "function") updateGrossPay();
+            } else {
+                resetInternFields();
             }
+        }).catch(err => {
+            console.error("Firebase Get Error:", err);
+            resetInternFields();
+        });
+    } else {
+        resetInternFields();
+    }
+});
+
+// Update your reset function to clear the specific formula fields too
+function resetInternFields() {
+    document.getElementById('icNumber').textContent = '-';
+    document.getElementById('bankAccount').textContent = '-';
+    document.getElementById('basicPay').textContent = 'RM 0.00';
+    
+    // Reset Formula text
+    document.getElementById('dailyFormula').textContent = 'Formula: -';
+    document.getElementById('hourlyFormula').textContent = 'Formula: -';
+    document.getElementById('ot15Formula').textContent = '(undefined)';
+    document.getElementById('ot20Formula').textContent = '(undefined)';
+    
+    // Reset RM Values
+    document.getElementById('dailySalary').textContent = 'RM 0.00';
+    document.getElementById('hourlySalary').textContent = 'RM 0.00';
+    document.getElementById('ot15Rate').textContent = 'RM 0.00';
+    document.getElementById('ot20Rate').textContent = 'RM 0.00';
+    
+    if (document.getElementById('overtimeList')) document.getElementById('overtimeList').innerHTML = '';
+}
+                // Inside your internSelect.addEventListener('change', ...)
+            // Inside your internSelect.addEventListener('change', ...)
+            // get(internRef).then((snapshot) => {
+            //     if (snapshot.exists()) {
+            //         const data = snapshot.val();
+                    
+            //         // INTERN SPECIFIC: We treat allowance as 'BASIC' for the formula engine
+            //         const basePay = parseFloat(data.allowance || data.basicPay) || 0;
+
+            //         // 1. Calculate Rates using Formulas from Firebase
+            //         const dailyAmt = evaluateFormula(data.dailyFormula || "(BASIC/26)", { BASIC: basePay });
+            //         const hourlyAmt = evaluateFormula(data.hourlyFormula || "(BASIC/26/8)", { BASIC: basePay, DAILY: dailyAmt });
+            //         const ot15Amt = evaluateFormula(data.ot15Formula || "(HOURLY*1.5)", { HOURLY: hourlyAmt });
+            //         const ot20Amt = evaluateFormula(data.ot20Formula || "(HOURLY*2.0)", { HOURLY: hourlyAmt });
+
+            //         // 2. Update UI Formula Labels (The text part)
+            //         document.getElementById('dailyFormula').textContent = `Formula: ${data.dailyFormula || '(BASIC/26)'}`;
+            //         document.getElementById('hourlyFormula').textContent = `Formula: ${data.hourlyFormula || '(BASIC/26/8)'}`;
+            //         document.getElementById('ot15Formula').textContent = data.ot15Formula || '(HOURLY*1.5)';
+            //         document.getElementById('ot20Formula').textContent = data.ot20Formula || '(HOURLY*2.0)';
+
+            //         // 3. Update UI RM Values (The amount part)
+            //         document.getElementById('dailyRate').textContent = `RM ${dailyAmt.toFixed(2)}`;
+            //         document.getElementById('hourlyRate').textContent = `RM ${hourlyAmt.toFixed(2)}`;
+            //         document.getElementById('ot15Rate').textContent = `RM ${ot15Amt.toFixed(2)}`;
+            //         document.getElementById('ot20Rate').textContent = `RM ${ot20Amt.toFixed(2)}`;
+                    
+            //         // Store hourly rate for the "Add OT" button logic
+            //         window.currentHourlyRate = hourlyAmt;
+
+            //         if (typeof updateGrossPay === "function") updateGrossPay();
+            //     } else {
+            //         resetInternFields();
+            //     }
+            // }).catch(err => {
+            //     console.error("Error:", err);
+            //     resetInternFields();
+            // });
 
             document.getElementById('addOvertime').addEventListener('click', function() {
             const hours = parseFloat(document.getElementById('otHours').value);
@@ -842,71 +957,68 @@
             updateOvertimeTotal(); // This will also update gross pay
         };
             // Update deduction calculations when intern is selected
-            document.getElementById('employeeSelect').addEventListener('change', function() {
-                // Update rates display
-                const dailySalary = parseFloat(document.getElementById('dailySalary').textContent.replace('RM ', '')) || 0;
-                const hourlySalary = parseFloat(document.getElementById('hourlySalary').textContent.replace('RM ', '')) || 0;
+            // Add Event Listener for Employee Selection
+        document.getElementById('employeeSelect').addEventListener('change', function(e) {
+            const selectedInternId = e.target.value;
+            
+            if (selectedInternId) {
+                // FIX: Define internRef HERE so the code below can see it
+                const internRef = ref(database, 'Employee/' + selectedInternId);
                 
-                document.getElementById('dailyRate').textContent = `RM ${formatNumber(dailySalary)}`;
-                document.getElementById('hourlyRate').textContent = `RM ${formatNumber(hourlySalary)}`;
-                window.currentHourlyRate = hourlySalary;
-                // Reset deduction inputs
-                document.getElementById('deductionDays').value = '';
-                document.getElementById('deductionHours').value = '';
-                document.getElementById('dailyDeduction').value = '0.00';
-                document.getElementById('hoursDeduction').value = '0.00';
-            });
+                get(internRef).then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        
+                        // 1. Update Profile Info
+                        document.getElementById('icNumber').textContent = data.icNumber || '-';
+                        document.getElementById('bankAccount').textContent = data.bankAccount || '-';
+                        
+                        // Interns use 'allowance' as their base pay
+                        const basePay = parseFloat(data.allowance || data.basicPay) || 0;
+                        document.getElementById('basicPay').textContent = `RM ${basePay.toFixed(2)}`;
 
-            // Calculate daily deduction
-            document.getElementById('deductionDays').addEventListener('input', function() {
-                const days = parseFloat(this.value) || 0;
-                const dailyRate = parseFloat(document.getElementById('dailyRate').textContent.replace('RM ', '')) || 0;
-                const deduction = truncateToTwoDecimals(days * dailyRate);
-                document.getElementById('dailyDeduction').value = formatNumber(deduction);
-                updateTotalDeductions();
-            });
+                        // 2. Fetch Formulas from the Database (stored under the employee)
+                        const formulas = {
+                            daily: data.dailyFormula || "(BASIC/26)",
+                            hourly: data.hourlyFormula || "(BASIC/26/8)",
+                            ot15: data.ot15Formula || "(HOURLY*1.5)",
+                            ot20: data.ot20Formula || "(HOURLY*2.0)"
+                        };
 
-            // Calculate hours deduction
-            document.getElementById('deductionHours').addEventListener('input', function() {
-                const hours = parseFloat(this.value) || 0;
-                const hourlyRate = parseFloat(document.getElementById('hourlyRate').textContent.replace('RM ', '')) || 0;
-                const deduction = truncateToTwoDecimals(hours * hourlyRate);
-                document.getElementById('hoursDeduction').value = formatNumber(deduction);
-                updateTotalDeductions();
-            });
+                        // 3. Calculate actual RM amounts
+                        const dailyAmt = evaluateFormula(formulas.daily, { BASIC: basePay });
+                        const hourlyAmt = evaluateFormula(formulas.hourly, { BASIC: basePay, DAILY: dailyAmt });
+                        const ot15Amt = evaluateFormula(formulas.ot15, { HOURLY: hourlyAmt });
+                        const ot20Amt = evaluateFormula(formulas.ot20, { HOURLY: hourlyAmt });
 
-            // Update the rates when salary calculations change
-            const observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    if (mutation.type === 'characterData' || mutation.type === 'childList') {
-                        const dailySalary = parseFloat(document.getElementById('dailySalary').textContent.replace('RM ', '')) || 0;
-                        const hourlySalary = parseFloat(document.getElementById('hourlySalary').textContent.replace('RM ', '')) || 0;
+                        // 4. Update UI - Text Labels (The parts you wanted to change)
+                        document.getElementById('dailyFormula').textContent = `Formula: ${formulas.daily}`;
+                        document.getElementById('hourlyFormula').textContent = `Formula: ${formulas.hourly}`;
+                        document.getElementById('ot15Formula').textContent = formulas.ot15;
+                        document.getElementById('ot20Formula').textContent = formulas.ot20;
+
+                        // 5. Update UI - RM Values
+                        document.getElementById('dailySalary').textContent = `RM ${dailyAmt.toFixed(2)}`;
+                        document.getElementById('hourlySalary').textContent = `RM ${hourlyAmt.toFixed(2)}`;
+                        document.getElementById('ot15Rate').textContent = `RM ${ot15Amt.toFixed(2)}`;
+                        document.getElementById('ot20Rate').textContent = `RM ${ot20Amt.toFixed(2)}`;
                         
-                        document.getElementById('dailyRate').textContent = `RM ${formatNumber(dailySalary)}`;
-                        document.getElementById('hourlyRate').textContent = `RM ${formatNumber(hourlySalary)}`;
-                        
-                        // Recalculate deductions
-                        const days = parseFloat(document.getElementById('deductionDays').value) || 0;
-                        const hours = parseFloat(document.getElementById('deductionHours').value) || 0;
-                        
-                        if (days > 0) {
-                            const dailyDeduction = truncateToTwoDecimals(days * dailySalary);
-                            document.getElementById('dailyDeduction').value = formatNumber(dailyDeduction);
-                        }
-                        
-                        if (hours > 0) {
-                            const hoursDeduction = truncateToTwoDecimals(hours * hourlySalary);
-                            document.getElementById('hoursDeduction').value = formatNumber(hoursDeduction);
-                        }
-                        
-                        updateTotalDeductions();
+                        // Store global hourly rate for OT list logic
+                        window.currentHourlyRate = hourlyAmt;
+
+                        if (typeof updateGrossPay === "function") updateGrossPay();
                     }
+                }).catch((error) => {
+                    console.error("Error fetching intern data:", error);
                 });
-            });
-
-            // Observe changes to salary calculation elements
-            observer.observe(document.getElementById('dailySalary'), { characterData: true, childList: true, subtree: true });
-            observer.observe(document.getElementById('hourlySalary'), { characterData: true, childList: true, subtree: true });
+            } else {
+                resetInternFields();
+            }
+        });
+            document.getElementById('deductionDays').addEventListener('input', recalcDailyDeductionLine);
+            document.getElementById('deductionDailyRate').addEventListener('input', recalcDailyDeductionLine);
+            document.getElementById('deductionHours').addEventListener('input', recalcHoursDeductionLine);
+            document.getElementById('deductionHourlyRate').addEventListener('input', recalcHoursDeductionLine);
 
             // Add additions
             document.getElementById('addAddition').addEventListener('click', function() {
@@ -973,7 +1085,7 @@
             };
 
             // Add save functionality
-            document.getElementById('saveSalary').addEventListener('click', function() {
+            document.getElementById('saveSalary').addEventListener('click', async function() {
                 const selectedIntern = document.getElementById('employeeSelect').value;
                 if (!selectedIntern) {
                     alert('Please select an intern');
@@ -988,6 +1100,15 @@
                     return;
                 }
 
+                const ok = await window.HwaYeapTheme.showConfirm({
+                    title: 'HR reminder — Full Attendance Allowance',
+                    message:
+                        'Please confirm that Full Attendance Allowance has been entered or calculated for this intern (e.g. under Reimbursement / allowances).\n\nClick Save to continue, or Cancel to review.',
+                    okText: 'Save',
+                    cancelText: 'Cancel'
+                });
+                if (!ok) return;
+
                 const salaryData = {
                     employeeName: selectedIntern,
                     month: month,
@@ -998,16 +1119,18 @@
                     salaryCalculations: {
                         dailySalary: parseFloat(document.getElementById('dailySalary').textContent.replace('RM ', '')) || 0,
                         hourlySalary: parseFloat(document.getElementById('hourlySalary').textContent.replace('RM ', '')) || 0,
-                        ot1_5Rate: parseFloat(document.getElementById('ot1_5').textContent.replace('RM ', '')) || 0,
-                        ot2_0Rate: parseFloat(document.getElementById('ot2_0').textContent.replace('RM ', '')) || 0
+                        ot1_5Rate: parseFloat(document.getElementById('ot15Rate').textContent.replace('RM ', '')) || 0,
+                        ot2_0Rate: parseFloat(document.getElementById('ot20Rate').textContent.replace('RM ', '')) || 0
                     },
                     deductions: {
                         advanceLoan: parseFloat(document.getElementById('advanceLoan').value) || 0,
                         advanceLoanType: document.getElementById('advanceLoanType').value,
                         dailyDeduction: parseFloat(document.getElementById('dailyDeduction').value) || 0,
                         deductionDays: parseFloat(document.getElementById('deductionDays').value) || 0,
+                        deductionDailyRate: parseFloat(document.getElementById('deductionDailyRate').value) || 0,
                         hoursDeduction: parseFloat(document.getElementById('hoursDeduction').value) || 0,
                         deductionHours: parseFloat(document.getElementById('deductionHours').value) || 0,
+                        deductionHourlyRate: parseFloat(document.getElementById('deductionHourlyRate').value) || 0,
                         totalDeductions: parseFloat(document.getElementById('totalDeductions').textContent.replace('RM ', '')) || 0
                     },
                     additions: additionsEntries.map(entry => ({
@@ -1044,6 +1167,8 @@
                         document.getElementById('overtimeList').innerHTML = '';
                         document.getElementById('additionsList').innerHTML = '';
                         document.getElementById('advanceLoan').value = '0.00';
+                        document.getElementById('deductionDailyRate').value = '';
+                        document.getElementById('deductionHourlyRate').value = '';
                         document.getElementById('dailyDeduction').value = '0.00';
                         document.getElementById('hoursDeduction').value = '0.00';
                         updateGrossPay();
@@ -1058,56 +1183,56 @@
         });
 
         // Add loadSalaryFormulas function
-        async function loadSalaryFormulas() {
-            try {
-                const formulasRef = ref(database, 'Settings/SalaryFormulas');
-                const snapshot = await get(formulasRef);
-                
-                if (snapshot.exists()) {
-                    window.salaryFormulas = snapshot.val();
-                    
-                    // Update formula displays
-                    document.getElementById('dailySalaryFormula').textContent = 
-                        `(${window.salaryFormulas.dailySalary.formula})`;
-                    document.getElementById('hourlySalaryFormula').textContent = 
-                        `(${window.salaryFormulas.hourlySalary.formula})`;
-                    document.getElementById('ot15Formula').textContent = 
-                        `(${window.salaryFormulas.ot15.formula})`;
-                    document.getElementById('ot20Formula').textContent = 
-                        `(${window.salaryFormulas.ot20.formula})`;
-                } else {
-                    // Set default formulas if none exist
-                    window.salaryFormulas = {
-                        dailySalary: { formula: 'ALLOWANCE/45/4*9' },
-                        hourlySalary: { formula: 'ALLOWANCE/45/4' },
-                        ot15: { formula: 'HOURLY*1.5' },
-                        ot20: { formula: 'HOURLY*2.0' }
-                    };
-                    // Update formula displays with defaults
-                    document.getElementById('dailySalaryFormula').textContent = '(BASIC/45/4*9)';
-                    document.getElementById('hourlySalaryFormula').textContent = '(BASIC/45/4)';
-                    document.getElementById('ot15Formula').textContent = '(HOURLY*1.5)';
-                    document.getElementById('ot20Formula').textContent = '(HOURLY*2.0)';
-                }
-            } catch (error) {
-                console.error("Error loading salary formulas:", error);
-                alert("Error loading salary formulas. Using default formulas.");
-            }
+        async function loadSalaryFormulas(employeeId) {
+    try {
+        const employeeRef = ref(database, `Employee/${employeeId}`);
+        const snapshot = await get(employeeRef);
+        
+        if (snapshot.exists()) {
+            const data = snapshot.val();
+            
+            // 1. Get formulas from database or set defaults
+            const formulas = {
+                daily: data.dailyFormula || "(BASIC/26)",
+                hourly: data.hourlyFormula || "(BASIC/26/8)",
+                ot15: data.ot15Formula || "(HOURLY*1.5)",
+                ot20: data.ot20Formula || "(HOURLY*2.0)"
+            };
+
+            // 2. Update the UI Text labels (The parts you wanted to change)
+            document.getElementById('dailyFormula').textContent = `Formula: ${formulas.daily}`;
+            document.getElementById('hourlyFormula').textContent = `Formula: ${formulas.hourly}`;
+            document.getElementById('ot15Formula').textContent = formulas.ot15;
+            document.getElementById('ot20Formula').textContent = formulas.ot20;
+            
+            return formulas;
         }
+    } catch (error) {
+        console.error("Error loading employee formulas:", error);
+    }
+}
 
         // Function to evaluate formula with variables
-        function evaluateFormula(formula, variables) {
-            let evalFormula = formula;
-            for (const [key, value] of Object.entries(variables)) {
-                evalFormula = evalFormula.replace(new RegExp(key, 'g'), value);
-            }
-            try {
-                return eval(evalFormula);
-            } catch (error) {
-                console.error("Error evaluating formula:", error);
-                return 0;
-            }
-        }
+        function evaluateFormula(formulaStr, variables) {
+    try {
+        if (!formulaStr) return 0;
+        let expression = formulaStr.toUpperCase();
+        
+        // Map variables to values (matches main.html logic)
+        if (variables.BASIC !== undefined) expression = expression.replace(/BASIC/g, variables.BASIC);
+        if (variables.ALLOWANCE !== undefined) expression = expression.replace(/ALLOWANCE/g, variables.ALLOWANCE);
+        if (variables.HOURLY !== undefined) expression = expression.replace(/HOURLY/g, variables.HOURLY);
+        if (variables.DAILY !== undefined) expression = expression.replace(/DAILY/g, variables.DAILY);
+
+        // Security: Remove illegal characters before evaluating
+        expression = expression.replace(/[^0-9+\-*/().\s]/g, '');
+        
+        return new Function(`return ${expression}`)() || 0;
+    } catch (e) {
+        console.error("Formula Error:", e);
+        return 0;
+    }
+}
     </script>
 </body>
 </html>
