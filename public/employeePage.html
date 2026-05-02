@@ -4,8 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Employee Management - Salary System</title>
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('hwayeap-theme');
+                if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+                else if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+                else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/theme.css">
     <style>
        :root {
             --primary: #8B0000;
@@ -239,6 +252,24 @@
         }
         .bg-active { background-color: #d4edda; color: #155724; }
         .bg-leave { background-color: #fff3cd; color: #856404; }
+        /* Standard inputs and dropdowns */
+.form-control, .form-select {
+    border: 1.5px solid #000000 !important; /* Pure black and slightly thicker */
+    color: #000000; /* Ensures the text you type is also clear */
+}
+
+/* When you click inside the input box */
+.form-control:focus, .form-select:focus {
+    border-color: #000000 !important;
+    box-shadow: 0 0 0 0.25rem rgba(0, 0, 0, 0.1); /* Subtle shadow so it looks modern */
+    outline: none;
+}
+
+/* For labels to match the darker look */
+.form-label {
+    color: #000000;
+    font-weight: 600;
+}
     </style>
 </head>
 <body>
@@ -295,9 +326,14 @@
 
         <!-- Main Content -->
         <div id="content">
-            <button class="toggle-sidebar">
-                <i class="fas fa-bars"></i>
-            </button>
+            <div class="d-flex align-items-center gap-2 flex-wrap mb-3">
+                <button type="button" class="toggle-sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary theme-toggle-btn" data-theme-toggle title="Toggle dark mode">
+                    <i class="fas fa-moon theme-toggle-icon"></i>
+                </button>
+            </div>
             
             <div class="page-header">
                 <h1 class="h3 mb-0">Employee Management</h1>
@@ -305,45 +341,67 @@
             </div>
             
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-12">
                     <div class="card">
                         <div class="card-header">
                             Add New Employee
                         </div>
                         <div class="card-body employee-form">
                             <form id="employeeForm">
-                                <div class="mb-2">
-                                    <label class="form-label small">Full Name</label>
+                               <div class="mb-2 d-flex align-items-center">
+                                    <label class="form-label small mb-0 me-2 text-nowrap">Full Name</label>
                                     <input type="text" class="form-control form-control-sm" placeholder="Enter full name" required>
                                 </div>
-                                <div class="mb-2">
-                                    <label class="form-label small">IC Number</label>
+                                <div class="mb-2 d-flex align-items-center">
+                                    <label class="form-label small mb-0 me-2 text-nowrap">IC Number</label>
                                     <input type="text" class="form-control form-control-sm" placeholder="Enter IC number" required>
                                 </div>
-                                <div class="mb-2">
-                                    <label class="form-label small">Bank Account</label>
+                                <div class="mb-2 d-flex align-items-center">
+                                    <label class="form-label small mb-0 me-2 text-nowrap">Bank Account</label>
                                     <input type="text" class="form-control form-control-sm" placeholder="Bank and account number" required>
                                 </div>
-                                <div class="mb-2">
-                                    <label class="form-label small">Email</label>
+                                <div class="mb-2 d-flex align-items-center">
+                                    <label class="form-label small mb-0 me-2 text-nowrap">Email</label>
                                     <input type="text" class="form-control form-control-sm" placeholder="Enter email address" required>
                                 </div>
-                                <div class="mb-2">
-                                    <label class="form-label small">Position</label>
+                                <div class="mb-2 d-flex align-items-center">
+                                    <label class="form-label small mb-0 me-2 text-nowrap">Position</label>
                                     <select class="form-select form-select-sm" required>
                                         <option value="">Select Position</option>
                                         <option value="Employee">Employee</option>
                                         <option value="Intern">Intern</option>
-                                        <option value="Resigned">Resigned </option>
                                     </select>
                                 </div>
-                                <div class="mb-2">
-                                    <label class="form-label small">Basic Pay 基本支付</label>
+                                <div class="mb-2 d-flex align-items-center">
+                                    <label class="form-label small mb-0 me-2 text-nowrap">Employment Status</label>
+                                    <select class="form-select form-select-sm" id="employeeStatus">
+                                        <option value="Active" selected>Active</option>
+                                        <option value="Inactive">Inactive</option>
+                                    </select>
+                                </div>
+                                <div class="mb-2 d-flex align-items-center">
+                                    <label class="form-label small mb-0 me-2 text-nowrap">Basic Pay 基本支付</label>
                                     <input type="number" class="form-control form-control-sm" placeholder="Enter basic pay" required>
                                 </div>
-                                <div class="mb-2">
-                                    <label class="form-label small">Skills Allowances 津贴</label>
+                                <div class="mb-2 d-flex align-items-center">
+                                    <label class="form-label small mb-0 me-2 text-nowrap">Skills Allowances 津贴</label>
                                     <input type="number" class="form-control form-control-sm" placeholder="Enter skills allowances" required>
+                                </div>
+                                <div class="mb-2 d-flex align-items-center">
+                                    <label class="form-label small mb-0 me-2 text-nowrap">Daily Salary Formula</label>
+                                    <input type="text" class="form-control form-control-sm" placeholder="e.g. BASIC/26">
+                                </div>
+                                <div class="mb-2 d-flex align-items-center">
+                                    <label class="form-label small mb-0 me-2 text-nowrap">Hourly Salary Formula</label>
+                                    <input type="text" class="form-control form-control-sm" placeholder="e.g. DAILY/8">
+                                </div>
+                                <div class="mb-2 d-flex align-items-center">
+                                    <label class="form-label small mb-0 me-2 text-nowrap">OT 1.5 Rate Formula</label>
+                                    <input type="text" class="form-control form-control-sm" placeholder="e.g. HOURLY*1.5">
+                                </div>
+                                <div class="mb-2 d-flex align-items-center">
+                                    <label class="form-label small mb-0 me-2 text-nowrap">OT 2.0 Rate Formula</label>
+                                    <input type="text" class="form-control form-control-sm" placeholder="e.g. HOURLY*2.0">
                                 </div>
                                 <div class="d-grid">
                                     <button type="submit" class="btn btn-primary btn-sm">
@@ -355,7 +413,7 @@
                     </div>
                 </div>
                 
-                <div class="col-md-8">
+                <div class="col-12">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <div>Employee List</div>
@@ -421,6 +479,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app-theme.js"></script>
     <!-- Add Firebase SDK -->
     <script type="module">
         // Import the functions you need from the SDKs you need
@@ -477,123 +536,221 @@
 
         // Function to load employees from Firebase
         function loadEmployees() {
-            const tableBody = document.querySelector('.table tbody');
-            tableBody.innerHTML = ''; // Clear existing table content
+    const tableBody = document.querySelector('.table tbody');
+    const employeesRef = ref(database, 'Employee');
+    const employeesQuery = query(employeesRef);
 
-            const employeesRef = ref(database, 'Employee');
-            const employeesQuery = query(employeesRef);
-
-            onValue(employeesQuery, (snapshot) => {
-                tableBody.innerHTML = ''; // Clear existing table content
-                
-                snapshot.forEach((childSnapshot) => {
-                    const employeeName = childSnapshot.key;
-                    const employeeData = childSnapshot.val();
-                    const isLeave = employeeData.position === 'Resigned'; // Check status
-                    const row = document.createElement('tr');
-                    if (isLeave) row.classList.add('row-inactive'); // Gray out row
-                    row.innerHTML = `
-                        <td>${employeeName}</td>
-                        <td>${employeeData.icNumber || ''}</td>
-                        <td>${employeeData.bankAccount || ''}</td>
-                        <td>${employeeData.email || ''}</td>
-                        <td>${employeeData.position || ''}</td>
-                        <td>
-                            <span class="status-badge ${isLeave ? 'bg-leave' : 'bg-active'}">
-                                ${isLeave ? 'INACTIVE' : 'ACTIVE'}
-                            </span>
-                        </td>
-                        <td>RM ${employeeData.basicPay || '0'}</td>
-                        <td>RM ${employeeData.allowances || '0'}</td>
-                        <td class="action-btns">
-                            <button class="btn btn-sm btn-outline-primary" onclick="editEmployee('${employeeName}')">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="deleteEmployee('${employeeName}')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    `;
-                    tableBody.appendChild(row);
-                });
-            }, (error) => {
-                console.error("Error loading employees: ", error);
-                alert("Error loading employees. Please try again.");
-            });
-        }
-        document.getElementById('employeeForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const newName = this.elements[0].value.trim(); 
-            const oldName = this.dataset.editId;          
+    onValue(employeesQuery, (snapshot) => {
+        tableBody.innerHTML = ''; 
+        
+        snapshot.forEach((childSnapshot) => {
+            const employeeName = childSnapshot.key;
+            const employeeData = childSnapshot.val();
             
-            const employeeData = {
-                icNumber: this.elements[1].value,
-                bankAccount: this.elements[2].value,
-                email: this.elements[3].value,
-                position: this.elements[4].value,
-                basicPay: this.elements[5].value,
-                allowances: this.elements[6].value
-            };
+            // LOGIC: Inactive if Position is 'Resigned' OR Status is 'Inactive'
+            const isInactive = 
+                (employeeData.position === 'Resigned') || 
+                (employeeData.status === 'Inactive' || employeeData.status === 'INACTIVE');
 
-            try {
-                if (oldName) {
-                    // SCENARIO: UPDATING EXISTING
-                    if (oldName !== newName) {
-                        const confirmMigration = confirm(`You are changing the name from "${oldName}" to "${newName}". This will update all past salary history. Proceed?`);
-                        
-                        if (!confirmMigration) return;
+            const row = document.createElement('tr');
+            if (isInactive) row.classList.add('row-inactive'); 
 
-                        // 1. Start History Migration
-                        const salaryRef = ref(database, 'Salary');
-                        const salarySnapshot = await get(salaryRef);
-                        
-                        if (salarySnapshot.exists()) {
-                            const allSalaries = salarySnapshot.val();
-                            const updates = {};
-
-                            // Loop through years -> months -> employees
-                            for (const year in allSalaries) {
-                                for (const month in allSalaries[year]) {
-                                    if (allSalaries[year][month][oldName]) {
-                                        // Copy data to new name path
-                                        updates[`Salary/${year}/${month}/${newName}`] = allSalaries[year][month][oldName];
-                                        // Set old name path to null (deletes it)
-                                        updates[`Salary/${year}/${month}/${oldName}`] = null;
-                                    }
-                                }
-                            }
-                            // Apply all salary moves at once
-                            await update(ref(database), updates);
-                        }
-
-                        // 2. Delete the old Employee Profile record
-                        await remove(ref(database, `Employee/${oldName}`));
-                    }
-                    
-                    // 3. Save profile under the new name
-                    await set(ref(database, `Employee/${newName}`), employeeData);
-                    alert(`Employee ${newName} and all history updated successfully!`);
-                    
-                } else {
-                    // SCENARIO: NEW EMPLOYEE
-                    await set(ref(database, `Employee/${newName}`), employeeData);
-                    alert(`Employee ${newName} added successfully!`);
-                }
-                
-                // Reset Form
-                this.reset();
-                delete this.dataset.editId;
-                const submitBtn = this.querySelector('button[type="submit"]');
-                submitBtn.innerHTML = '<i class="fas fa-plus-circle me-2"></i> Add Employee';
-                
-                // Refresh the list if your page has a load function
-                if (typeof loadEmployees === "function") loadEmployees();
-                
-            } catch (error) {
-                console.error("Error saving employee: ", error);
-                alert("Error saving employee.");
-            }
+            row.innerHTML = `
+                <td>${employeeName}</td>
+                <td>${employeeData.icNumber || ''}</td>
+                <td>${employeeData.bankAccount || ''}</td>
+                <td>${employeeData.email || ''}</td>
+                <td>${employeeData.position || ''}</td>
+                <td>
+                    <span class="status-badge ${isInactive ? 'bg-leave' : 'bg-active'}">
+                        ${isInactive ? 'INACTIVE' : 'ACTIVE'}
+                    </span>
+                </td>
+                <td>RM ${employeeData.basicPay || '0'}</td>
+                <td>RM ${employeeData.allowances || '0'}</td>
+                <td class="action-btns">
+                    <button class="btn btn-sm btn-outline-primary" onclick="editEmployee('${employeeName}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteEmployee('${employeeName}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tableBody.appendChild(row);
         });
+    });
+}
+        // document.getElementById('employeeForm').addEventListener('submit', async function(e) {
+        //     e.preventDefault();
+        //     const newName = this.elements[0].value.trim(); 
+        //     const oldName = this.dataset.editId;          
+            
+        //     const employeeData = {
+        //         icNumber: this.elements[1].value,
+        //         bankAccount: this.elements[2].value,
+        //         email: this.elements[3].value,
+        //         position: this.elements[4].value,
+        //         status: document.getElementById('employeeStatus').value,
+        //         basicPay: this.elements[6].value,
+        //         allowances: this.elements[7].value,
+        //         dailyFormula: this.elements[8].value || "",
+        //         hourlyFormula: this.elements[9].value || "",
+        //         ot15Formula: this.elements[10].value || "",
+        //         ot20Formula: this.elements[11].value || "",
+                
+
+        //     };
+
+        //     try {
+        //         if (oldName) {
+        //             // SCENARIO: UPDATING EXISTING
+        //             if (oldName !== newName) {
+        //                 const confirmMigration = confirm(`You are changing the name from "${oldName}" to "${newName}". This will update all past salary history. Proceed?`);
+                        
+        //                 if (!confirmMigration) return;
+
+        //                 // 1. Start History Migration
+        //                 const salaryRef = ref(database, 'Salary');
+        //                 const salarySnapshot = await get(salaryRef);
+                        
+        //                 if (salarySnapshot.exists()) {
+        //                     const allSalaries = salarySnapshot.val();
+        //                     const updates = {};
+
+        //                     // Loop through years -> months -> employees
+        //                     for (const year in allSalaries) {
+        //                         for (const month in allSalaries[year]) {
+        //                             if (allSalaries[year][month][oldName]) {
+        //                                 // Copy data to new name path
+        //                                 updates[`Salary/${year}/${month}/${newName}`] = allSalaries[year][month][oldName];
+        //                                 // Set old name path to null (deletes it)
+        //                                 updates[`Salary/${year}/${month}/${oldName}`] = null;
+        //                             }
+        //                         }
+        //                     }
+        //                     // Apply all salary moves at once
+        //                     await update(ref(database), updates);
+        //                 }
+
+        //                 // 2. Delete the old Employee Profile record
+        //                 await remove(ref(database, `Employee/${oldName}`));
+        //             }
+                    
+        //             // 3. Save profile under the new name
+        //             await set(ref(database, `Employee/${newName}`), employeeData);
+        //             alert(`Employee ${newName} and all history updated successfully!`);
+                    
+        //         } else {
+        //             // SCENARIO: NEW EMPLOYEE
+        //             await set(ref(database, `Employee/${newName}`), employeeData);
+        //             alert(`Employee ${newName} added successfully!`);
+        //         }
+                
+        //         // Reset Form
+        //         this.reset();
+        //         delete this.dataset.editId;
+        //         const submitBtn = this.querySelector('button[type="submit"]');
+        //         submitBtn.innerHTML = '<i class="fas fa-plus-circle me-2"></i> Add Employee';
+                
+        //         // Refresh the list if your page has a load function
+        //         if (typeof loadEmployees === "function") loadEmployees();
+                
+        //     } catch (error) {
+        //         console.error("Error saving employee: ", error);
+        //         alert("Error saving employee.");
+        //     }
+        // });
+        // --- FIXED FORM SUBMISSION LOGIC ---
+document.getElementById('employeeForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    // Use named selectors or careful indexing to avoid "Active" being saved as "Basic Pay"
+    const newName = this.querySelector('input[placeholder="Enter full name"]').value.trim();
+    const oldName = this.dataset.editId;          
+    
+    const employeeData = {
+        icNumber: this.querySelector('input[placeholder="Enter IC number"]').value,
+        bankAccount: this.querySelector('input[placeholder="Bank and account number"]').value,
+        email: this.querySelector('input[placeholder="Enter email address"]').value,
+        position: this.querySelector('select:not(#employeeStatus)').value,
+        status: document.getElementById('employeeStatus').value,
+        basicPay: this.querySelector('input[placeholder="Enter basic pay"]').value,
+        allowances: this.querySelector('input[placeholder="Enter skills allowances"]').value,
+        dailyFormula: this.querySelector('input[placeholder="e.g. BASIC/26"]').value || "",
+        hourlyFormula: this.querySelector('input[placeholder="e.g. DAILY/8"]').value || "",
+        ot15Formula: this.querySelector('input[placeholder="e.g. HOURLY*1.5"]').value || "",
+        ot20Formula: this.querySelector('input[placeholder="e.g. HOURLY*2.0"]').value || ""
+    };
+
+    try {
+        if (oldName && oldName !== newName) {
+            const confirmMigration = confirm(`Changing name from "${oldName}" to "${newName}" will migrate salary history. Proceed?`);
+            if (!confirmMigration) return;
+
+            // Migrate Salary History
+            const salaryRef = ref(database, 'Salary');
+            const salarySnapshot = await get(salaryRef);
+            if (salarySnapshot.exists()) {
+                const allSalaries = salarySnapshot.val();
+                const updates = {};
+                for (const year in allSalaries) {
+                    for (const month in allSalaries[year]) {
+                        if (allSalaries[year][month][oldName]) {
+                            updates[`Salary/${year}/${month}/${newName}`] = allSalaries[year][month][oldName];
+                            updates[`Salary/${year}/${month}/${oldName}`] = null;
+                        }
+                    }
+                }
+                await update(ref(database), updates);
+            }
+            await remove(ref(database, `Employee/${oldName}`));
+        }
+        
+        // Save profile
+        await set(ref(database, `Employee/${newName}`), employeeData);
+        alert(`Employee ${newName} saved successfully!`);
+        
+        this.reset();
+        delete this.dataset.editId;
+        this.querySelector('button[type="submit"]').innerHTML = '<i class="fas fa-plus-circle me-2"></i> Add Employee';
+        
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Error saving data.");
+    }
+});
+
+// --- FIXED EDIT LOGIC (Ensures all data shows correctly when retrieving) ---
+async function editEmployee(employeeName) {
+    try {
+        const snapshot = await get(ref(database, `Employee/${employeeName}`));
+        if (snapshot.exists()) {
+            const emp = snapshot.val();
+            const form = document.getElementById('employeeForm');
+            
+            // Map data back to form
+            form.querySelector('input[placeholder="Enter full name"]').value = employeeName;
+            form.querySelector('input[placeholder="Enter IC number"]').value = emp.icNumber || '';
+            form.querySelector('input[placeholder="Bank and account number"]').value = emp.bankAccount || '';
+            form.querySelector('input[placeholder="Enter email address"]').value = emp.email || '';
+            form.querySelector('select:not(#employeeStatus)').value = emp.position || '';
+            document.getElementById('employeeStatus').value = emp.status || 'Active';
+            form.querySelector('input[placeholder="Enter basic pay"]').value = emp.basicPay || '';
+            form.querySelector('input[placeholder="Enter skills allowances"]').value = emp.allowances || '';
+            form.querySelector('input[placeholder="e.g. BASIC/26"]').value = emp.dailyFormula || '';
+            form.querySelector('input[placeholder="e.g. DAILY/8"]').value = emp.hourlyFormula || '';
+            form.querySelector('input[placeholder="e.g. HOURLY*1.5"]').value = emp.ot15Formula || '';
+            form.querySelector('input[placeholder="e.g. HOURLY*2.0"]').value = emp.ot20Formula || '';
+
+            form.dataset.editId = employeeName;
+            form.querySelector('button[type="submit"]').innerHTML = '<i class="fas fa-save me-2"></i> Update Employee';
+            form.scrollIntoView({ behavior: 'smooth' });
+        }
+    } catch (error) {
+        console.error("Error retrieving:", error);
+    }
+}
 
         // Function to delete employee
         async function deleteEmployee(employeeName) {
@@ -608,29 +765,28 @@
             }
         }
         function applyTableFilters() {
-            const nameQuery = document.getElementById('filterName').value.toLowerCase();
-            const posQuery = document.getElementById('filterPosition').value;
-            const statQuery = document.getElementById('filterStatus').value;
-            
-            const rows = document.querySelectorAll('.table tbody tr');
+    const nameQuery = document.getElementById('filterName').value.toLowerCase();
+    const posQuery = document.getElementById('filterPosition').value;
+    const statQuery = document.getElementById('filterStatus').value; // 'Active', 'INACTIVE', or 'All'
+    
+    const rows = document.querySelectorAll('.table tbody tr');
 
-            rows.forEach(row => {
-                const nameText = row.cells[0].textContent.toLowerCase();
-                const posText = row.cells[4].textContent.trim();
-                // We look for the text inside the status badge
-                const statText = row.cells[5].textContent.trim().toUpperCase(); 
+    rows.forEach(row => {
+        const nameText = row.cells[0].textContent.toLowerCase();
+        const posText = row.cells[4].textContent.trim();
+        const statText = row.cells[5].textContent.trim().toUpperCase(); // This gets the text from the badge
 
-                const matchesName = nameText.includes(nameQuery);
-                const matchesPos = (posQuery === "All") || (posText === posQuery);
-                const matchesStat = (statQuery === "All") || (statText === statQuery.toUpperCase());
+        const matchesName = nameText.includes(nameQuery);
+        const matchesPos = (posQuery === "All") || (posText === posQuery);
+        const matchesStat = (statQuery === "All") || (statText === statQuery.toUpperCase());
 
-                if (matchesName && matchesPos && matchesStat) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
+        if (matchesName && matchesPos && matchesStat) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
         }
+    });
+}
 
         // Attach listeners to the new header elements
         document.getElementById('filterName').addEventListener('input', applyTableFilters);
@@ -646,35 +802,35 @@
         }
         // Function to edit employee
       // Function to edit employee
-        async function editEmployee(employeeName) {
-            try {
-                const employeeRef = ref(database, `Employee/${employeeName}`);
-                const snapshot = await get(employeeRef);
+        // async function editEmployee(employeeName) {
+        //     try {
+        //         const employeeRef = ref(database, `Employee/${employeeName}`);
+        //         const snapshot = await get(employeeRef);
                 
-                if (snapshot.exists()) {
-                    const employee = snapshot.val();
-                    const form = document.getElementById('employeeForm');
+        //         if (snapshot.exists()) {
+        //             const employee = snapshot.val();
+        //             const form = document.getElementById('employeeForm');
                     
-                    // Fill the form
-                    form.elements[0].value = employeeName; // Name field
-                    form.elements[1].value = employee.icNumber || '';
-                    form.elements[2].value = employee.bankAccount || '';
-                    form.elements[3].value = employee.email || '';
-                    form.elements[4].value = employee.position || '';
-                    form.elements[5].value = employee.basicPay || '';
-                    form.elements[6].value = employee.allowances || '';
+        //             // Fill the form
+        //             form.elements[0].value = employeeName; // Name field
+        //             form.elements[1].value = employee.icNumber || '';
+        //             form.elements[2].value = employee.bankAccount || '';
+        //             form.elements[3].value = employee.email || '';
+        //             form.elements[4].value = employee.position || '';
+        //             form.elements[5].value = employee.basicPay || '';
+        //             form.elements[6].value = employee.allowances || '';
 
-                    // CRITICAL: Store the OLD name so we can delete it if the name changes
-                    form.dataset.editId = employeeName;
+        //             // CRITICAL: Store the OLD name so we can delete it if the name changes
+        //             form.dataset.editId = employeeName;
 
-                    const submitBtn = form.querySelector('button[type="submit"]');
-                    submitBtn.innerHTML = '<i class="fas fa-save me-2"></i> Update Employee';
-                    form.scrollIntoView({ behavior: 'smooth' });
-                }
-            } catch (error) {
-                console.error("Error getting employee: ", error);
-            }
-        }
+        //             const submitBtn = form.querySelector('button[type="submit"]');
+        //             submitBtn.innerHTML = '<i class="fas fa-save me-2"></i> Update Employee';
+        //             form.scrollIntoView({ behavior: 'smooth' });
+        //         }
+        //     } catch (error) {
+        //         console.error("Error getting employee: ", error);
+        //     }
+        // }
 
         // Search functionality
         const searchInput = document.querySelector('.input-group input');
@@ -699,6 +855,36 @@
 
         // Load employees when page loads
         document.addEventListener('DOMContentLoaded', loadEmployees);
+        document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('employeeForm') || document.querySelector('form');
+
+    if (form) {
+        form.addEventListener('keydown', function(e) {
+            // Check if the pressed key is "Enter"
+            if (e.key === 'Enter') {
+                
+                // 1. Check if the current element is a <textarea> or the Submit button
+                // We want Enter to still work normally for those.
+                const tagName = e.target.tagName.toLowerCase();
+                const isSubmitButton = e.target.type === 'submit';
+                
+                if (tagName !== 'textarea' && !isSubmitButton) {
+                    // 2. Prevent the default form submission
+                    e.preventDefault();
+
+                    // 3. Find all "focusable" elements in the form
+                    const focusableElements = form.querySelectorAll('input, select, textarea, button:not([type="submit"])');
+                    const index = Array.prototype.indexOf.call(focusableElements, e.target);
+
+                    // 4. Move focus to the next element if it exists
+                    if (index > -1 && index < focusableElements.length - 1) {
+                        focusableElements[index + 1].focus();
+                    }
+                }
+            }
+        });
+    }
+});
     </script>
 </body>
 </html>
