@@ -1,102 +1,156 @@
-require("dotenv").config(); // 必须在第一行
 const express = require("express");
-const { google } = require("googleapis");
-const path = require("path"); // 必须引入，用于处理文件路径
-const cors = require("cors"); // 引入 cors 解决跨域问题
+const path = require("path");
+const nodemailer = require("nodemailer");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 
 const app = express();
-
-// --- 1. 中间件配置 ---
 app.use(cors());
-// 增加 body 解析限额，防止 PDF 过大导致失败
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+app.use(bodyParser.json({ limit: "50mb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
 
-// --- 2. 静态文件托管 (解决 Cannot GET / 的关键) ---
-// 假设你的 login.html 等文件在名为 public 的文件夹内
+// ✅ Serve Static Files from `public/`
 app.use(express.static(path.join(__dirname, "public")));
 
-// --- 3. 首页路由 ---
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "login.html"));
+    res.sendFile(path.join(__dirname, "public", "login.html")); // Main Page
 });
 
-// --- 4. Google Gmail API 配置 ---
-const oAuth2Client = new google.auth.OAuth2(
-  process.env.GMAIL_CLIENT_ID,
-  process.env.GMAIL_CLIENT_SECRET,
-  "https://developers.google.com/oauthplayground"
-);
+const EMAIL_USER = process.env.EMAIL_USER && String(process.env.EMAIL_USER).trim();
+const EMAIL_PASS = process.env.EMAIL_PASS && String(process.env.EMAIL_PASS).replace(/\s+/g, "").trim();
 
-oAuth2Client.setCredentials({ 
-    refresh_token: process.env.GMAIL_REFRESH_TOKEN 
+if (!EMAIL_USER || !EMAIL_PASS) {
+    console.warn(
+        "[mail] EMAIL_USER / EMAIL_PASS are missing. Set them in Render: Environment tab (this app does not read public/.env). " +
+            "Local: use HWAYEAP/.env next to server.js."
+    );
+} else {
+    console.log("[mail] SMTP sender configured:", EMAIL_USER);
+}
+
+/**
+ * Accept data URI from html2pdf (`data:application/pdf;base64,...`) or raw base64.
+ */
+function pdfBufferFromClient(input) {
+    if (typeof input !== "string" || !input.trim()) {
+        throw new Error("Invalid or empty pdfBuffer");
+    }
+    const trimmed = input.trim();
+    const marker = "base64,";
+    const idx = trimmed.indexOf(marker);
+    const b64 =
+        idx !== -1 ? trimmed.slice(idx + marker.length) : trimmed;
+    const buf = Buffer.from(b64, "base64");
+    if (!buf.length) {
+        throw new Error("Decoded PDF attachment is empty (check PDF generation)");
+    }
+    if (buf.length < 4 || buf.subarray(0, 4).toString("ascii") !== "%PDF") {
+        console.warn("[mail] Attachment may not be a valid PDF file (missing %PDF header).");
+    }
+    return buf;
+}
+
+function formatMailError(error) {
+    const parts = [error.message || String(error)];
+    if (error.code) parts.push("code:" + error.code);
+    if (error.responseCode) parts.push("smtp:" + error.responseCode);
+    if (typeof error.response === "string" && error.response) {
+        parts.push(error.response.trim().slice(0, 300));
+    }
+    return parts.join(" | ");
+}
+
+// ✅ Gmail SMTP — use App Password (Google Account → Security → 2-Step Verification → App passwords)
+const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
+    requireTLS: true,
+    auth: {
+        user: EMAIL_USER,
+        pass: EMAIL_PASS
+    }
 });
 
-// --- 5. 邮件发送接口 ---
+transporter.verify((error) => {
+    if (error) {
+        console.error("[mail] SMTP verify failed:", formatMailError(error));
+    } else {
+        console.log("[mail] SMTP server is ready to send emails");
+    }
+});
+
 app.post("/api/send-email", async (req, res) => {
-  try {
-    const { recipientEmail, recipientName, month, year, pdfBuffer, fileName } = req.body;
-    
-    // 初始化 Gmail 服务
-    const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
+    try {
+        const { recipientEmail, recipientName, month, year, pdfBuffer, fileName } = req.body || {};
 
-    // 提取 Base64 数据
-    const base64Data = pdfBuffer.split("base64,")[1];
-    
-    // 构建 MIME 邮件格式
-    const subject = `HWA YEAP ENGINEERING - Salary Voucher for ${month} ${year}`;
-    // 对中文/特殊字符主题进行编码
-    const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
-    
-    const messageParts = [
-      `From: Hwa Yeap Engineering <abbey7341@gmail.com>`,
-      `To: ${recipientEmail}`,
-      `Subject: ${utf8Subject}`,
-      `MIME-Version: 1.0`,
-      `Content-Type: multipart/mixed; boundary="foo_bar_baz"`,
-      ``,
-      `--foo_bar_baz`,
-      `Content-Type: text/html; charset="utf-8"`,
-      `Content-Transfer-Encoding: 7bit`,
-      ``,
-      `<p>Dear ${recipientName},</p><p>Please find attached your salary voucher for ${month} ${year}.</p><p>Best regards,<br>Hwa Yeap Engineering</p>`,
-      ``,
-      `--foo_bar_baz`,
-      `Content-Type: application/pdf`,
-      `Content-Disposition: attachment; filename="${fileName}"`,
-      `Content-Transfer-Encoding: base64`,
-      ``,
-      base64Data,
-      `--foo_bar_baz--`,
-    ];
+        if (!recipientEmail || !recipientName || !month || !year || !pdfBuffer || !fileName) {
+            return res.status(400).json({ error: "Missing required fields" });
+        }
 
-    const message = messageParts.join('\n');
-    const encodedMessage = Buffer.from(message)
-      .toString('base64')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=+$/, '');
+        if (!EMAIL_USER || !EMAIL_PASS) {
+            console.error("[mail] Reject send: EMAIL_USER / EMAIL_PASS not configured on server");
+            return res.status(503).json({
+                error: "Email is not configured on the server",
+                details: "Set EMAIL_USER and EMAIL_PASS in Render → Environment (Gmail App Password, no spaces). Redeploy if needed."
+            });
+        }
 
-    // 执行发送
-    await gmail.users.messages.send({
-      userId: 'me',
-      requestBody: { raw: encodedMessage },
-    });
+        let pdfAttachment;
+        try {
+            pdfAttachment = pdfBufferFromClient(pdfBuffer);
+        } catch (decodeErr) {
+            console.error("[mail] PDF decode error:", decodeErr.message);
+            return res.status(400).json({ error: "Invalid PDF attachment", details: decodeErr.message });
+        }
 
-    console.log(`成功发送至: ${recipientEmail}`);
-    res.json({ success: true });
+        const mailOptions = {
+            from: {
+                name: "Hwa Yeap Engineering",
+                address: EMAIL_USER
+            },
+            to: recipientEmail,
+            subject: `Salary Voucher for ${month} ${year}`,
+            text:
+                `Dear ${recipientName},\n\nPlease find attached your salary voucher for ${month} ${year}.\n\nBest regards,\nHwa Yeap Engineering`,
+            attachments: [
+                {
+                    filename: fileName,
+                    content: pdfAttachment,
+                    contentType: "application/pdf"
+                }
+            ]
+        };
 
-  } catch (error) {
-    console.error("Gmail API 报错详情:", error);
-    res.status(500).json({ 
-      error: "邮件发送失败", 
-      details: error.message 
-    });
-  }
+        const info = await transporter.sendMail(mailOptions);
+        console.log("[mail] sent:", info.messageId, "→", recipientEmail);
+
+        res.status(200).json({
+            message: "Email sent successfully",
+            messageId: info.messageId
+        });
+    } catch (error) {
+        const detail = formatMailError(error);
+        console.error("[mail] sendMail failed:", detail);
+        if (error && error.stack) console.error(error.stack);
+
+        res.status(500).json({
+            error: "Failed to send email",
+            details: error.message || detail
+        });
+    }
 });
 
-// --- 6. 启动服务器 ---
+app.use((err, req, res, next) => {
+    console.error("Server error:", err);
+    res.status(500).json({
+        error: "Internal server error",
+        details: err.message
+    });
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`服务器已启动，监听端口: ${PORT}`);
+    console.log(`Server running at http://localhost:${PORT}`);
 });
