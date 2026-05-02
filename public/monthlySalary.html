@@ -4,8 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Print BankIn Slip</title>
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('hwayeap-theme');
+                if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+                else if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+                else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/theme.css">
     <!-- Add SheetJS for Excel -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Add html2pdf for PDF generation -->
@@ -261,7 +274,7 @@
             border-bottom: 1px dashed #e0e0e0;
         }
         
-        .detail-label {f
+        .detail-label {
             color: #455a64;
         }
         
@@ -658,20 +671,59 @@
                 display: none !important;
             }
 
-            /* Hide overtime calculation details in print */
+            /* Overtime row: label + list fills remaining width */
+            #overtimeList {
+                flex: 1 !important;
+                min-width: 0 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+
+            /* Overtime: show hours × multiplier and RM amount */
             .overtime-details {
-                display: none !important;
-                visibility: hidden !important;
+                display: inline-block !important;
+                visibility: visible !important;
             }
 
             .overtime-entry {
-                display: block !important;
-                text-align: right !important;
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: baseline !important;
+                width: 100% !important;
+                border-bottom: 1px solid #000 !important;
+                padding: 2px 0 !important;
             }
 
             .overtime-amount {
                 display: inline-block !important;
                 text-align: right !important;
+                flex-shrink: 0 !important;
+            }
+
+            /* Deduction breakdown lines (days × rate = …) — hide duplicate total-only spans */
+            #dailyDeductionDetails,
+            #hoursDeductionDetails {
+                display: block !important;
+                visibility: visible !important;
+                text-align: right !important;
+                font-size: 8pt !important;
+            }
+
+            .deduction-details {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: flex-end !important;
+                flex: 1 !important;
+            }
+
+            .employee-only {
+                display: none !important;
+            }
+
+            #netPay {
+                font-size: 14pt !important;
+                font-weight: bold !important;
             }
 
             /* Ensure other detail rows maintain their layout */
@@ -808,105 +860,15 @@
             }
         }
 
-        @media print {
-            /* Employee Print Styles */
-            .employee-print .salary-calculations {
-                display: none !important;
-            }
-
-            .employee-print .overtime-details {
-                display: none !important;
-            }
-
-            .employee-print .overtime-entry {
-                display: block !important;
-                text-align: right !important;
-            }
-
-            .employee-print .overtime-amount {
-                display: inline-block !important;
-                text-align: right !important;
-            }
-
-            /* Admin Print Styles */
-            .admin-print .salary-calculations {
-                display: block !important;
-            }
-
-            .admin-print .overtime-details {
-                display: inline-block !important;
-            }
-
-	  .admin-print #netPay {
- 		font-size: 18px;
-    		font-weight: bold;
-	    }
-	   .employee-print #netPay {
- 		font-size: 18px;
-    		font-weight: bold;
-	    }
-
-            .admin-print .overtime-entry {
-                display: flex !important;
-                justify-content: space-between !important;
-            }
-
-            .admin-print .overtime-amount {
-                display: inline-block !important;
-            }
-
-                        /* Deduction details visibility for print */
-            .admin-print .employee-only {
-                display: none !important;
-            }
-
-            .employee-print .employee-only {
-                display: inline-block !important;
-            }
-
-            /* Deduction details layout for print */
-            .admin-print .deduction-details {
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: flex-end !important;
-            }
-
-            .employee-print .deduction-details {
-                display: flex !important;
-                flex-direction: row !important;
-                align-items: center !important;
-            }
-
-            .employee-print #dailyDeductionDetails,
-            .employee-print #hoursDeductionDetails {
-                display: none !important;
-            }
-
-        /* Screen styles for deduction details */
+        /* Screen: hide alternate total-only spans; breakdown uses detail IDs */
         .employee-only {
             display: none !important;
         }
 
-        /* Default view shows detailed breakdown */
         .deduction-details {
             display: flex;
             flex-direction: column;
             align-items: flex-end;
-        }
-
-        /* Employee print hides details, shows only totals */
-        .employee-print .deduction-details {
-            flex-direction: row;
-        }
-
-        .employee-print .employee-only {
-            display: inline-block !important;
-        }
-
-        .employee-print #dailyDeductionDetails,
-        .employee-print #hoursDeductionDetails {
-            display: none !important;
-        }
         }
 
         /* Two-column layout */
@@ -993,36 +955,12 @@
             border-bottom: 1px solid #000 !important;
         }
 
-                    /* Ensure right alignment for amounts */
-            .detail-value, 
-            .contribution-value,
-            .total-row span:last-child {
-                text-align: right !important;
-            }
-
-            /* Deduction details styling for print */
-            .admin-print .deduction-details {
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: flex-end !important;
-            }
-
-            .admin-print .admin-only {
-                display: block !important;
-                font-size: 7pt !important;
-                color: #666 !important;
-                margin-bottom: 2px !important;
-            }
-
-            .employee-print .admin-only {
-                display: none !important;
-            }
-
-            .employee-print .deduction-details {
-                display: flex !important;
-                flex-direction: row !important;
-                align-items: center !important;
-            }
+        /* Ensure right alignment for amounts */
+        .detail-value,
+        .contribution-value,
+        .total-row span:last-child {
+            text-align: right !important;
+        }
 
         /* Details section layout - screen only */
         @media screen {
@@ -1159,9 +1097,14 @@
 
         <!-- Main Content -->
         <div id="content">
-            <button class="toggle-sidebar">
-                <i class="fas fa-bars"></i>
-            </button>
+            <div class="d-flex align-items-center gap-2 flex-wrap mb-3">
+                <button type="button" class="toggle-sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary theme-toggle-btn" data-theme-toggle title="Toggle dark mode">
+                    <i class="fas fa-moon theme-toggle-icon"></i>
+                </button>
+            </div>
             
             <div class="page-header">
                 <h1 class="h3 mb-0">Print BankIn Slip</h1>
@@ -1203,11 +1146,8 @@
                     <button class="btn btn-success" onclick="saveAsExcel()">
                         <i class="fas fa-file-excel"></i> Save as Excel
                     </button>
-                    <button class="btn btn-danger" onclick="printForEmployee()">
-                        <i class="fas fa-file-pdf"></i> Print For Employee
-                    </button>
-                    <button class="btn btn-primary" onclick="printForAdmin()">
-                        <i class="fas fa-print"></i> Print For Admin
+                    <button type="button" class="btn btn-primary" onclick="printVoucher()">
+                        <i class="fas fa-print"></i> Print voucher
                     </button>
                     <button class="btn btn-info" onclick="sendPdfByEmail()">
                         <i class="fas fa-envelope"></i> Send PDF by Email
@@ -1280,7 +1220,7 @@
                                     </div>
                                     
                                     <div class="detail-row">
-                                        <span class="detail-label" id="payLabel2">OVERTIME 超时</span>
+                                        <span class="detail-label">OVERTIME 超时</span>
                                         <div id="overtimeList"></div>
                                     </div>
                                     
@@ -1400,10 +1340,7 @@
                           
                             
                             <div class="signature-section">
-                                <div class="signature-group">
-                                    <div class="signature-label">APPROVED BY 批准者</div>
-                                    <div class="signature-box">Chong</div>
-                                </div>
+                               
                                 
                                 <div class="signature-group">
                                     <div class="signature-label">EMPLOYEES SIGNATURE 雇员签名</div>
@@ -1411,7 +1348,7 @@
                                 </div>
                                 
                                 <div class="signature-group">
-                                    <div class="signature-label">Company Stamp</div>
+                                    <div class="signature-label">Approved and Issued By</div>
                                     <div class="signature-box">
                                         <img src="hwaYeapStamp.png" alt="Company Stamp" 
                                              style="width: 20%; height: auto; object-fit: contain;">
@@ -1450,6 +1387,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app-theme.js"></script>
     <!-- Add Firebase SDK -->
     <script type="module">
         // Import the functions you need from the SDKs you need
@@ -1592,21 +1530,17 @@
                         
                         // 3. Update the label and value based on the position
                         const payLabel = document.getElementById('payLabel');
-						
-						const payLabel2 = document.getElementById('payLabel2');
                         const basicPayDisplay = document.getElementById('basicPay');
 
                         if (isIntern) {
-                            payLabel.textContent = 'COMMISSIONS 佣金';
-							payLabel2.textContent = 'COMMISSIONS2 佣金2';
+                            payLabel.textContent = 'ALLOWANCE 津贴';
                             // Check if stored as allowance or basicPay
                             const amount = salaryData.basicPay || 0;
                             basicPayDisplay.textContent = `RM ${amount}`;
                         } else {
                             payLabel.textContent = 'BASIC PAY 基本支付 epf';
                             basicPayDisplay.textContent = `RM ${salaryData.basicPay || 0}`;
-						}
-					
+                        }
 
                         // Call your existing display function for the rest of the data
                         displaySalaryData(salaryData, employee, month, year);
@@ -1620,6 +1554,67 @@
                 console.error("Error loading data: ", error);
                 alert("Error loading data. Please try again.");
             });
+        }
+
+        /** Prefer manual rates saved on intern voucher; else derive from total÷qty; else formula rates. */
+        function internDeductionDailyRateForDisplay(deductions, salaryCalculations, deductionDays, dailyDeductionAmount) {
+            const raw = deductions?.deductionDailyRate;
+            if (raw !== undefined && raw !== null && raw !== '') {
+                const r = parseFloat(raw);
+                if (!isNaN(r)) return r;
+            }
+            if (deductionDays > 0 && dailyDeductionAmount > 0) {
+                return dailyDeductionAmount / deductionDays;
+            }
+            return salaryCalculations?.dailySalary || 0;
+        }
+
+        function internDeductionHourlyRateForDisplay(deductions, salaryCalculations, deductionHours, hoursDeductionAmount) {
+            const raw = deductions?.deductionHourlyRate;
+            if (raw !== undefined && raw !== null && raw !== '') {
+                const r = parseFloat(raw);
+                if (!isNaN(r)) return r;
+            }
+            if (deductionHours > 0 && hoursDeductionAmount > 0) {
+                return hoursDeductionAmount / deductionHours;
+            }
+            return salaryCalculations?.hourlySalary || 0;
+        }
+
+        /** Intern voucher vs employee / migrated RTDB keys → single shape for display */
+        function normalizedDeductionQuantities(deductions) {
+            const d = deductions || {};
+            const num = (v) => {
+                if (v === undefined || v === null || v === '') return 0;
+                const n = parseFloat(v);
+                return isNaN(n) ? 0 : n;
+            };
+            const pickDays = () => {
+                if (d.deductionDays != null && d.deductionDays !== '') return num(d.deductionDays);
+                if (d.dailyDeductionDays != null && d.dailyDeductionDays !== '') return num(d.dailyDeductionDays);
+                return 0;
+            };
+            const pickHours = () => {
+                if (d.deductionHours != null && d.deductionHours !== '') return num(d.deductionHours);
+                if (d.hoursDeductionHours != null && d.hoursDeductionHours !== '') return num(d.hoursDeductionHours);
+                return 0;
+            };
+            const pickDailyAmt = () => {
+                if (d.dailyDeductionTotal != null && d.dailyDeductionTotal !== '') return num(d.dailyDeductionTotal);
+                if (d.dailyDeduction != null && d.dailyDeduction !== '') return num(d.dailyDeduction);
+                return 0;
+            };
+            const pickHoursAmt = () => {
+                if (d.hoursDeductionTotal != null && d.hoursDeductionTotal !== '') return num(d.hoursDeductionTotal);
+                if (d.hoursDeduction != null && d.hoursDeduction !== '') return num(d.hoursDeduction);
+                return 0;
+            };
+            return {
+                deductionDays: pickDays(),
+                dailyDeductionAmount: pickDailyAmt(),
+                deductionHours: pickHours(),
+                hoursDeductionAmount: pickHoursAmt()
+            };
         }
 
         // Display salary data
@@ -1715,159 +1710,63 @@
                     netPay.textContent = `RM ${(data.netPay || 0).toFixed(2)}`;
                 }
                 
-                // Display deductions
+                // Display deductions (RTDB may use intern keys and/or employee-style aliases)
                 const deductions = data.deductions || {};
-                
-                // Check employee position to determine field names
-                const employeeRef = ref(database, `Employee/${employee}`);
-                get(employeeRef).then((snapshot) => {
-                    if (snapshot.exists()) {
-                        const employeeData = snapshot.val();
-                        const isIntern = employeeData.position === 'Intern';
-                        
-                        let dailyDeductionAmount, hoursDeductionAmount;
-                        
-                        if (isIntern) {
-                            // Intern data structure
-                            dailyDeductionAmount = deductions.dailyDeduction || 0;
-                            hoursDeductionAmount = deductions.hoursDeduction || 0;
-                        } else {
-                            // Employee data structure
-                            dailyDeductionAmount = deductions.dailyDeductionTotal || 0;
-                            hoursDeductionAmount = deductions.hoursDeductionTotal || 0;
-                        }
-                        
-                        const deductionFields = {
-                            'epfEmployee': deductions.epfEmployee,
-                            'socso': deductions.socso,
-                            'eis': deductions.eis,
-                            'pcb': deductions.pcb,
-                            'advanceLoan': deductions.advanceLoan,
-                            'advanceLoanType': deductions.advanceLoanType || '-',
-                            'dailyDeduction': dailyDeductionAmount,
-                            'hoursDeduction': hoursDeductionAmount,
-                            'allowanceDeductions': deductions.allowanceDeductions
-                        };
-                        
-                        // Update deduction fields
-                        for (const [id, value] of Object.entries(deductionFields)) {
-                            const element = document.getElementById(id);
-                            if (element) {
-                                if (id === 'advanceLoanType') {
-                                    element.textContent = value;
-                                } else {
-                                    element.textContent = `RM ${(value || 0).toFixed(2)}`;
-                                }
-                            }
-                        }
-                    }
-                }).catch(() => {
-                    // Fallback to employee structure if error
-                    const deductionFields = {
-                        'epfEmployee': deductions.epfEmployee,
-                        'socso': deductions.socso,
-                        'eis': deductions.eis,
-                        'pcb': deductions.pcb,
-                        'advanceLoan': deductions.advanceLoan,
-                        'advanceLoanType': deductions.advanceLoanType || '-',
-                        'dailyDeduction': deductions.dailyDeductionTotal || 0,
-                        'hoursDeduction': deductions.hoursDeductionTotal || 0,
-                        'allowanceDeductions': deductions.allowanceDeductions
-                    };
-                    
-                    // Update deduction fields
-                    for (const [id, value] of Object.entries(deductionFields)) {
-                        const element = document.getElementById(id);
-                        if (element) {
-                            if (id === 'advanceLoanType') {
-                                element.textContent = value;
-                            } else {
-                                element.textContent = `RM ${(value || 0).toFixed(2)}`;
-                            }
-                        }
-                    }
-                });
+                const dedQ = normalizedDeductionQuantities(deductions);
 
-                // Update deduction details for view slip format
+                const deductionFields = {
+                    'epfEmployee': deductions.epfEmployee,
+                    'socso': deductions.socso,
+                    'eis': deductions.eis,
+                    'pcb': deductions.pcb,
+                    'advanceLoan': deductions.advanceLoan,
+                    'advanceLoanType': deductions.advanceLoanType || '-',
+                    'dailyDeduction': dedQ.dailyDeductionAmount,
+                    'hoursDeduction': dedQ.hoursDeductionAmount,
+                    'allowanceDeductions': deductions.allowanceDeductions
+                };
+
+                for (const [id, value] of Object.entries(deductionFields)) {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        if (id === 'advanceLoanType') {
+                            element.textContent = value;
+                        } else {
+                            element.textContent = `RM ${(parseFloat(value) || 0).toFixed(2)}`;
+                        }
+                    }
+                }
+
+                // Deduction detail lines: manual rate from Firebase → else total÷qty → else formula
                 const dailyDeductionDetails = document.getElementById('dailyDeductionDetails');
                 const hoursDeductionDetails = document.getElementById('hoursDeductionDetails');
-                
-                if (dailyDeductionDetails || hoursDeductionDetails) {
-                    // Get employee position from database
-                    const employeeRef2 = ref(database, `Employee/${employee}`);
-                    get(employeeRef2).then((snapshot) => {
-                        if (snapshot.exists()) {
-                            const employeeData = snapshot.val();
-                            const isIntern = employeeData.position === 'Intern';
-                            
-                            // Update daily deduction details
-                            if (dailyDeductionDetails) {
-                                let deductionDays, dailyDeductionAmount;
-                                
-                                if (isIntern) {
-                                    // Intern data structure
-                                    deductionDays = deductions.deductionDays || 0;
-                                    dailyDeductionAmount = deductions.dailyDeduction || 0;
-                                } else {
-                                    // Employee data structure
-                                    deductionDays = deductions.dailyDeductionDays || 0;
-                                    dailyDeductionAmount = deductions.dailyDeductionTotal || 0;
-                                }
-                                
-                                if (deductionDays > 0) {
-                                    const dailyRate = data.salaryCalculations?.dailySalary || 0;
-                                    dailyDeductionDetails.textContent = `${deductionDays} days × RM ${dailyRate.toFixed(2)} = RM ${dailyDeductionAmount.toFixed(2)}`;
-                                } else {
-                                    dailyDeductionDetails.textContent = 'RM 0.00';
-                                }
-                            }
-                            
-                            // Update hours deduction details
-                            if (hoursDeductionDetails) {
-                                let deductionHours, hoursDeductionAmount;
-                                
-                                if (isIntern) {
-                                    // Intern data structure
-                                    deductionHours = deductions.deductionHours || 0;
-                                    hoursDeductionAmount = deductions.hoursDeduction || 0;
-                                } else {
-                                    // Employee data structure
-                                    deductionHours = deductions.hoursDeductionHours || 0;
-                                    hoursDeductionAmount = deductions.hoursDeductionTotal || 0;
-                                }
-                                
-                                if (deductionHours > 0) {
-                                    const hourlyRate = data.salaryCalculations?.hourlySalary || 0;
-                                    hoursDeductionDetails.textContent = `${deductionHours} hours × RM ${hourlyRate.toFixed(2)} = RM ${hoursDeductionAmount.toFixed(2)}`;
-                                } else {
-                                    hoursDeductionDetails.textContent = 'RM 0.00';
-                                }
-                            }
-                        }
-                    }).catch(() => {
-                        // Fallback to employee structure if error
-                        if (dailyDeductionDetails) {
-                            const deductionDays = deductions.dailyDeductionDays || 0;
-                            const dailyDeductionAmount = deductions.dailyDeductionTotal || 0;
-                            if (deductionDays > 0) {
-                                const dailyRate = data.salaryCalculations?.dailySalary || 0;
-                                dailyDeductionDetails.textContent = `${deductionDays} days × RM ${dailyRate.toFixed(2)} = RM ${dailyDeductionAmount.toFixed(2)}`;
-                            } else {
-                                dailyDeductionDetails.textContent = 'RM 0.00';
-                            }
-                        }
-                        
-                        if (hoursDeductionDetails) {
-                            const deductionHours = deductions.hoursDeductionHours || 0;
-                            const hoursDeductionAmount = deductions.hoursDeductionTotal || 0;
-                            if (deductionHours > 0) {
-                                const hourlyRate = data.salaryCalculations?.hourlySalary || 0;
-                                hoursDeductionDetails.textContent = `${deductionHours} hours × RM ${hourlyRate.toFixed(2)} = RM ${hoursDeductionAmount.toFixed(2)}`;
-                            } else {
-                                hoursDeductionDetails.textContent = 'RM 0.00';
-                            }
-                        }
-                    });
+                if (dailyDeductionDetails) {
+                    if (dedQ.deductionDays > 0) {
+                        const dailyRate = internDeductionDailyRateForDisplay(
+                            deductions,
+                            data.salaryCalculations,
+                            dedQ.deductionDays,
+                            dedQ.dailyDeductionAmount
+                        );
+                        dailyDeductionDetails.textContent =
+                            `${dedQ.deductionDays} days × RM ${dailyRate.toFixed(2)} = RM ${dedQ.dailyDeductionAmount.toFixed(2)}`;
+                    } else {
+                        dailyDeductionDetails.textContent = 'RM 0.00';
+                    }
+                }
+                if (hoursDeductionDetails) {
+                    if (dedQ.deductionHours > 0) {
+                        const hourlyRate = internDeductionHourlyRateForDisplay(
+                            deductions,
+                            data.salaryCalculations,
+                            dedQ.deductionHours,
+                            dedQ.hoursDeductionAmount
+                        );
+                        hoursDeductionDetails.textContent =
+                            `${dedQ.deductionHours} hours × RM ${hourlyRate.toFixed(2)} = RM ${dedQ.hoursDeductionAmount.toFixed(2)}`;
+                    } else {
+                        hoursDeductionDetails.textContent = 'RM 0.00';
+                    }
                 }
                 
 
@@ -2141,49 +2040,19 @@
         alert("Failed to generate Excel file. Please check console for details.");
     }
 }
-        function printForEmployee() {
-            // Add employee print class to body
-            document.body.classList.add('employee-print');
-            // Remove admin print class if it exists
-            document.body.classList.remove('admin-print');
-            
-            // Get employee name and period
+        /** Single print layout: OT breakdown + deduction calculations + salary rates */
+        function printVoucher() {
+            document.body.classList.remove('employee-print', 'admin-print');
             const employee = document.getElementById('viewEmployee').value;
             const month = document.getElementById('viewMonth').value;
-            
-            // Set the document title for printing
             document.title = `${month}_SalaryVoucher_${employee}`;
-            
-            // Print
             window.print();
-            
-            // Remove the class after printing
             setTimeout(() => {
-                document.title = "Print BankIn Slip"; // Restore the original title
-                document.body.classList.remove('employee-print');
+                document.title = 'Print BankIn Slip';
             }, 1000);
         }
 
-        function printForAdmin() {
-            // Get employee name and period
-            const employee = document.getElementById('viewEmployee').value;
-            const month = document.getElementById('viewMonth').value;
-            
-            // Set the document title for printing
-            document.title = `${month}_SalaryVoucher_${employee}`;
-            
-            document.body.classList.add('admin-print');
-            document.body.classList.remove('employee-print');
-            
-            window.print();
-            
-            setTimeout(() => {
-                document.title = "Print BankIn Slip"; // Restore the original title
-                document.body.classList.remove('admin-print');
-            }, 1000);
-        }
-
-        // Function to send PDF by email
+        // Function to send PDF by email (PDF omits Salary Calculations rates block)
         async function sendPdfByEmail() {
             const employee = document.getElementById('viewEmployee').value;
             const month = document.getElementById('viewMonth').value;
@@ -2194,43 +2063,57 @@
                 return;
             }
 
-            // Ask for confirmation
-            if (!confirm("Send Email by PDF?")) {
-                return;
-            }
-
-            // Create loading indicator
-            const loadingDiv = createLoadingDiv();
-            document.body.appendChild(loadingDiv);
+            let loadingDiv = null;
 
             try {
-                // Get employee details
                 const employeeRef = ref(database, `Employee/${employee}`);
                 const snapshot = await get(employeeRef);
-                
+
                 if (!snapshot.exists()) {
                     throw new Error('Employee data not found');
                 }
 
                 const employeeData = snapshot.val();
-                const email = employeeData.email;
-                const fullName = employeeData.fullName || employee;
+                const emailRaw = employeeData.email;
+                const displayName =
+                    (employeeData.fullName && String(employeeData.fullName).trim()) ||
+                    (employeeData.name && String(employeeData.name).trim()) ||
+                    employee;
 
-                if (!email || email.trim() === '') {
+                if (!emailRaw || String(emailRaw).trim() === '') {
                     throw new Error('No valid email address found for this employee');
                 }
 
-                // Validate email format
+                const email = String(emailRaw).trim();
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailRegex.test(email)) {
                     throw new Error('Invalid email address format for this employee');
                 }
 
-                // Set print mode to employee version
-                document.body.classList.remove('admin-print');
-                document.body.classList.add('employee-print');
+                const theme = window.HwaYeapTheme;
+                if (!theme || typeof theme.showConfirm !== 'function') {
+                    throw new Error('Please refresh the page and try again.');
+                }
 
-                // Apply print styles temporarily
+                const confirmed = await theme.showConfirm({
+                    title: 'Send salary voucher by email?',
+                    message:
+                        'Recipient:\n\nName: ' +
+                        displayName +
+                        '\nEmail: ' +
+                        email +
+                        '\n\nThe emailed PDF uses the same layout as print, except the Salary Calculations section (daily / hourly / OT rates) is omitted.\n\nSend email now?',
+                    okText: 'Send email',
+                    cancelText: 'Cancel'
+                });
+                if (!confirmed) return;
+
+                loadingDiv = createLoadingDiv();
+                document.body.appendChild(loadingDiv);
+
+                document.body.classList.remove('employee-print', 'admin-print');
+
+                // Apply print-like styles on screen for PDF capture (same as browser print)
                 const style = document.createElement('style');
                 style.id = 'temp-print-style';
                 style.textContent = `
@@ -2305,9 +2188,44 @@
                             padding-left: 5px !important;
                         }
 
-                        /* Hide admin-only content */
-                        .employee-print .salary-calculations,
-                        .employee-print .overtime-details {
+                        /* Omit internal rate grid from emailed PDF only */
+                        .salary-calculations {
+                            display: none !important;
+                            visibility: hidden !important;
+                            height: 0 !important;
+                            overflow: hidden !important;
+                            padding: 0 !important;
+                            margin: 0 !important;
+                            border: none !important;
+                        }
+
+                        #overtimeList {
+                            flex: 1 !important;
+                            min-width: 0 !important;
+                            display: flex !important;
+                            flex-direction: column !important;
+                            align-items: stretch !important;
+                        }
+
+                        .overtime-details {
+                            display: inline-block !important;
+                            visibility: visible !important;
+                        }
+
+                        .overtime-entry {
+                            display: flex !important;
+                            justify-content: space-between !important;
+                            width: 100% !important;
+                        }
+
+                        #dailyDeductionDetails,
+                        #hoursDeductionDetails {
+                            display: block !important;
+                            visibility: visible !important;
+                            text-align: right !important;
+                        }
+
+                        .employee-only {
                             display: none !important;
                         }
 
@@ -2425,14 +2343,14 @@
                 const pdfData = await html2pdf().set(pdfOptions).from(wrapper).output('datauristring');
 
                 // Send to backend
-                const response = await fetch('https://hwayeapsalarywebsite.onrender.com/api/send-email', {
+                const response = await fetch('http://localhost:3001/api/send-email', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        recipientEmail: email.trim(),
-                        recipientName: fullName,
+                        recipientEmail: email,
+                        recipientName: displayName,
                         month: month,
                         year: year,
                         pdfBuffer: pdfData,
@@ -2453,9 +2371,8 @@
                 console.error('Error:', error);
                 alert(error.message || 'Error processing request. Please try again.');
             } finally {
-                // Always clean up resources
                 cleanupAfterPdf();
-                if (loadingDiv.parentNode) {
+                if (loadingDiv && loadingDiv.parentNode) {
                     document.body.removeChild(loadingDiv);
                 }
             }
@@ -2523,7 +2440,7 @@
             document.body.classList.remove('employee-print', 'admin-print');
             
             // Reset title
-            document.title = "Payroll History";
+            document.title = 'Print BankIn Slip';
         }
 
 function showConfirmationDialog(title, message, onConfirm, onCancel) {
