@@ -23,20 +23,33 @@ const RESEND_FROM =
 const EMAIL_USER = process.env.EMAIL_USER && String(process.env.EMAIL_USER).trim();
 const EMAIL_PASS = process.env.EMAIL_PASS && String(process.env.EMAIL_PASS).replace(/\s+/g, "").trim();
 
-/** Prefer Resend on hosts (e.g. Render) where outbound SMTP to Gmail is blocked (ETIMEDOUT). */
-const useResend = Boolean(RESEND_API_KEY);
+const GMAIL_CLIENT_ID = process.env.GMAIL_CLIENT_ID && String(process.env.GMAIL_CLIENT_ID).trim();
+const GMAIL_CLIENT_SECRET = process.env.GMAIL_CLIENT_SECRET && String(process.env.GMAIL_CLIENT_SECRET).trim();
+const GMAIL_REFRESH_TOKEN =
+    process.env.GMAIL_REFRESH_TOKEN && String(process.env.GMAIL_REFRESH_TOKEN).trim();
 
-if (useResend) {
-    console.log("[mail] Using Resend API over HTTPS (works on Render). From:", RESEND_FROM.split("<").pop().replace(">", ""));
+/** Redirect URI must match how the refresh token was issued (often OAuth Playground). */
+const GMAIL_OAUTH_REDIRECT_URI =
+    (process.env.GMAIL_OAUTH_REDIRECT_URI &&
+        String(process.env.GMAIL_OAUTH_REDIRECT_URI).trim()) ||
+    "https://developers.google.com/oauthplayground";
+
+const useGmailApi = Boolean(GMAIL_CLIENT_ID && GMAIL_CLIENT_SECRET && GMAIL_REFRESH_TOKEN && EMAIL_USER);
+const useResend = Boolean(RESEND_API_KEY) && !useGmailApi;
+
+if (useGmailApi) {
+    console.log("[mail] Using Gmail API (HTTPS) — From:", EMAIL_USER, "(matches Render; SMTP not used)");
+} else if (useResend) {
     console.log(
-        "[mail] Tip: Verify your own domain in Resend and set RESEND_FROM to e.g. Hwa Yeap Engineering <noreply@yourdomain.com>. " +
-            "onboarding@resend.dev only allows sending to approved test addresses."
+        "[mail] Using Resend; From:",
+        RESEND_FROM,
+        "(cannot spoof @gmail.com — use Gmail OAuth env vars to send from your Gmail)"
     );
 } else if (EMAIL_USER && EMAIL_PASS) {
-    console.log("[mail] Using Gmail SMTP (OK on local PCs; often blocked on cloud hosts). Sender:", EMAIL_USER);
+    console.log("[mail] Using Gmail SMTP (local only; blocked on many clouds). Sender:", EMAIL_USER);
 } else {
     console.warn(
-        "[mail] No mail configured. On Render add RESEND_API_KEY (+ RESEND_FROM after domain verify). Local dev can use EMAIL_USER / EMAIL_PASS for SMTP."
+        "[mail] No mail configured. Recommended on Render: GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN + EMAIL_USER. Or RESEND_API_KEY."
     );
 }
 
@@ -65,29 +78,65 @@ function formatMailError(error) {
     if (typeof error.response === "string" && error.response) {
         parts.push(error.response.trim().slice(0, 300));
     }
+    if (error.errors && Array.isArray(error.errors)) {
+        parts.push(JSON.stringify(error.errors).slice(0, 400));
+    }
     return parts.join(" | ");
 }
 
-let transporter = null;
-if (!useResend && EMAIL_USER && EMAIL_PASS) {
-    const nodemailer = require("nodemailer");
-    transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 587,
-        secure: false,
-        requireTLS: true,
-        auth: {
-            user: EMAIL_USER,
-            pass: EMAIL_PASS
+/** Gmail API expects RFC 822 as base64url. */
+function toGmailRaw(mimeBuf) {
+    return mimeBuf
+        .toString("base64")
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/, "");
+}
+
+function buildMimeMailBuffer(mailOptions) {
+    const MailComposer = require("nodemailer/lib/mail-composer");
+    const mimeNode = new MailComposer(mailOptions).compile();
+    return new Promise((resolve, reject) => {
+        mimeNode.build((err, buf) => (err ? reject(err) : resolve(buf)));
+    });
+}
+
+async function sendWithGmailApi({ recipientEmail, recipientName, month, year, pdfBinary, fileName }) {
+    const { google } = require("googleapis");
+    const { OAuth2Client } = require("google-auth-library");
+    const oauth2Client = new OAuth2Client(
+        GMAIL_CLIENT_ID,
+        GMAIL_CLIENT_SECRET,
+        GMAIL_OAUTH_REDIRECT_URI
+    );
+    oauth2Client.setCredentials({ refresh_token: GMAIL_REFRESH_TOKEN });
+
+    const gmail = google.gmail({ version: "v1", auth: oauth2Client });
+    const subject = `Salary Voucher for ${month} ${year}`;
+    const text =
+        `Dear ${recipientName},\n\nPlease find attached your salary voucher for ${month} ${year}.\n\nBest regards,\nHwa Yeap Engineering`;
+
+    const mimeBuf = await buildMimeMailBuffer({
+        from: `"Hwa Yeap Engineering" <${EMAIL_USER}>`,
+        to: recipientEmail,
+        subject,
+        text,
+        attachments: [
+            {
+                filename: fileName,
+                content: pdfBinary,
+                contentType: "application/pdf"
+            }
+        ]
+    });
+
+    const { data } = await gmail.users.messages.send({
+        userId: "me",
+        requestBody: {
+            raw: toGmailRaw(mimeBuf)
         }
     });
-    transporter.verify((error) => {
-        if (error) {
-            console.error("[mail] SMTP verify failed:", formatMailError(error));
-        } else {
-            console.log("[mail] SMTP server is ready");
-        }
-    });
+    return data;
 }
 
 async function sendWithResend({ recipientEmail, recipientName, month, year, pdfBinary, fileName }) {
@@ -120,6 +169,28 @@ async function sendWithResend({ recipientEmail, recipientName, month, year, pdfB
     return data;
 }
 
+let transporter = null;
+if (!useGmailApi && !useResend && EMAIL_USER && EMAIL_PASS) {
+    const nodemailer = require("nodemailer");
+    transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        requireTLS: true,
+        auth: {
+            user: EMAIL_USER,
+            pass: EMAIL_PASS
+        }
+    });
+    transporter.verify((error) => {
+        if (error) {
+            console.error("[mail] SMTP verify failed:", formatMailError(error));
+        } else {
+            console.log("[mail] SMTP server is ready");
+        }
+    });
+}
+
 async function sendWithSmtp({ recipientEmail, recipientName, month, year, pdfBinary, fileName }) {
     await transporter.sendMail({
         from: {
@@ -142,14 +213,6 @@ app.post("/api/send-email", async (req, res) => {
             return res.status(400).json({ error: "Missing required fields" });
         }
 
-        if (!useResend && (!EMAIL_USER || !EMAIL_PASS || !transporter)) {
-            return res.status(503).json({
-                error: "Email is not configured on the server",
-                details:
-                    "On Render, outbound SMTP to Gmail usually times out — set RESEND_API_KEY and RESEND_FROM in Environment. Local: set EMAIL_USER and EMAIL_PASS (Gmail App Password)."
-            });
-        }
-
         let pdfBinary;
         try {
             pdfBinary = pdfBufferFromClient(pdfBuffer);
@@ -160,12 +223,29 @@ app.post("/api/send-email", async (req, res) => {
 
         const payload = { recipientEmail, recipientName, month, year, pdfBinary, fileName };
 
+        if (useGmailApi) {
+            const data = await sendWithGmailApi(payload);
+            console.log("[mail] Gmail API sent id:", data && data.id, "→", recipientEmail);
+            return res.status(200).json({
+                message: "Email sent successfully",
+                messageId: (data && data.id) || null
+            });
+        }
+
         if (useResend) {
             const data = await sendWithResend(payload);
             console.log("[mail] Resend sent id:", data && data.id, "→", recipientEmail);
             return res.status(200).json({
                 message: "Email sent successfully",
                 messageId: (data && data.id) || null
+            });
+        }
+
+        if (!EMAIL_USER || !EMAIL_PASS || !transporter) {
+            return res.status(503).json({
+                error: "Email is not configured on the server",
+                details:
+                    "Use Gmail OAuth: GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN, plus EMAIL_USER (your Gmail). Or RESEND_API_KEY."
             });
         }
 
