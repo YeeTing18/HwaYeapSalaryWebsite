@@ -380,6 +380,14 @@
                                     </select>
                                 </div>
                                 <div class="mb-2 d-flex align-items-center">
+                                    <label class="form-label small mb-0 me-2 text-nowrap">Start Work Date 入职日期</label>
+                                    <input type="date" class="form-control form-control-sm" id="startWorkDate">
+                                </div>
+                                <div class="mb-2 d-flex align-items-center">
+                                    <label class="form-label small mb-0 me-2 text-nowrap">End Work Date 离职日期</label>
+                                    <input type="date" class="form-control form-control-sm" id="endWorkDate">
+                                </div>
+                                <div class="mb-2 d-flex align-items-center">
                                     <label class="form-label small mb-0 me-2 text-nowrap">Basic Pay 基本支付</label>
                                     <input type="number" class="form-control form-control-sm" placeholder="Enter basic pay" required>
                                 </div>
@@ -678,6 +686,8 @@ document.getElementById('employeeForm').addEventListener('submit', async functio
     const oldName = this.dataset.editId;          
     
     const employeeData = {
+        startWorkDate: document.getElementById('startWorkDate').value || "",
+        endWorkDate: document.getElementById('endWorkDate').value || "",
         icNumber: this.querySelector('input[placeholder="Enter IC number"]').value,
         bankAccount: this.querySelector('input[placeholder="Bank and account number"]').value,
         email: this.querySelector('input[placeholder="Enter email address"]').value,
@@ -740,6 +750,8 @@ async function editEmployee(employeeName) {
             
             // Map data back to form
             form.querySelector('input[placeholder="Enter full name"]').value = employeeName;
+            document.getElementById('startWorkDate').value = emp.startWorkDate || '';
+            document.getElementById('endWorkDate').value = emp.endWorkDate || '';
             form.querySelector('input[placeholder="Enter IC number"]').value = emp.icNumber || '';
             form.querySelector('input[placeholder="Bank and account number"]').value = emp.bankAccount || '';
             form.querySelector('input[placeholder="Enter email address"]').value = emp.email || '';
