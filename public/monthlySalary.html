@@ -1242,7 +1242,12 @@
                                         <span class="detail-label">TRAVEL ALLOWANCES 津贴</span>
                                         <span class="detail-value" id="allowances">RM 0.00</span>
                                     </div>
-                                    
+
+                                    <div class="detail-row" id="fullAttendanceRow" style="display:none;">
+                                        <span class="detail-label">FULL ATTENDANCE ALLOWANCE 全勤津贴</span>
+                                        <span class="detail-value" id="fullAttendanceAllowance">RM 0.00</span>
+                                    </div>
+
                                     <div class="total-row gross-total">
                                         <span>(A) GROSS PAY 总付额</span>
                                         <span id="grossPay">RM 0.00</span>
@@ -1377,8 +1382,10 @@
                   <!-- Add Remarks Section -->
                   <div class="remarks-section" style="margin-top: 15px; padding: 15px; background-color: #f8f9fa; border: 1px solid #dee2e6; margin-bottom: 15px;">
                     <h3 class="section-title">Remarks 备注</h3>
-                    <!-- <div class="remarks-content" style="min-height: 60px; padding: 10px; background-color: white; border: 1px solid #dee2e6;"> -->
                         <div id="remarksText" style="white-space: pre-wrap;">-</div>
+                        <div style="margin-top: 10px; font-size: 12px; color: #555; font-style: italic; border-top: 1px solid #dee2e6; padding-top: 8px;">
+                            If there are any discrepancies, please notify the office within 14 days of receiving this slip.
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1674,6 +1681,19 @@
                 const allowances = document.getElementById('allowances');
                 if (allowances) {
                     allowances.textContent = `RM ${(data.allowances || 0).toFixed(2)}`;
+                }
+
+                // Full Attendance Allowance — show only if saved value > 0
+                const faaRow = document.getElementById('fullAttendanceRow');
+                const faaEl = document.getElementById('fullAttendanceAllowance');
+                if (faaRow && faaEl) {
+                    const faaAmount = parseFloat(data.fullAttendanceAllowance) || 0;
+                    if (faaAmount > 0) {
+                        faaEl.textContent = `RM ${faaAmount.toFixed(2)}`;
+                        faaRow.style.display = '';
+                    } else {
+                        faaRow.style.display = 'none';
+                    }
                 }
                 
                 // Display overtime entries
