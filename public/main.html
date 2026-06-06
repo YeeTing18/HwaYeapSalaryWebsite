@@ -1924,7 +1924,15 @@
                                                     <span class="detail-label">TRAVEL ALLOWANCES 津贴</span>
                                                     <span class="detail-value" id="allowances">RM 0.00</span>
                                                 </div>
-                                                
+
+                                                <div class="detail-row" id="fullAttendanceRow" style="display:none;">
+                                                    <span class="detail-label">FULL ATTENDANCE ALLOWANCE 全勤津贴</span>
+                                                    <div class="input-group input-group-sm" style="width: 200px;">
+                                                        <span class="input-group-text">RM</span>
+                                                        <input type="number" class="form-control" id="fullAttendanceInput" placeholder="0.00" min="0" step="0.01" onchange="updateGrossPay()">
+                                                    </div>
+                                                </div>
+
                                                 <div class="total-row gross-total">
                                                     <span>(A) GROSS PAY 总付额</span>
                                                     <span id="grossPayAmount">RM 0.00</span>
@@ -2132,6 +2140,9 @@
     <div class="remark-subtitle">(For any additional information)</div>
   </div>
   <textarea class="form-control remarks-input" placeholder="Enter remarks here..." id="remarks"></textarea>
+  <div style="margin-top: 8px; font-size: 12px; color: #555; font-style: italic;">
+    If there are any discrepancies, please notify the office within 14 days of receiving this slip.
+  </div>
 </div>   
  <div class="save-section" style="padding: 20px; text-align: center; background-color: #FFF0F0; border-top: 2px solid #FFD6D6;">
     <button class="btn btn-primary btn-lg me-2" id="saveSalary" style="min-width: 200px;">
@@ -2349,6 +2360,16 @@
                         document.getElementById('basicPay').textContent = `RM ${basicVal.toFixed(2)}`;
                         document.getElementById('allowances').textContent = `RM ${(parseFloat(data.allowances) || 0).toFixed(2)}`;
 
+                        // Show/hide Full Attendance Allowance row based on employee setting
+                        const faaRow = document.getElementById('fullAttendanceRow');
+                        const faaInput = document.getElementById('fullAttendanceInput');
+                        if (data.fullAttendanceAllowance) {
+                            faaRow.style.display = '';
+                        } else {
+                            faaRow.style.display = 'none';
+                            faaInput.value = '';
+                        }
+
                         // Display Formulas (Optional UI hint)
                         document.getElementById('dailySalaryFormula').textContent = `Formula: ${data.dailyFormula || 'Manual'}`;
                         document.getElementById('hourlySalaryFormula').textContent = `Formula: ${data.hourlyFormula || 'Manual'}`;
@@ -2382,10 +2403,12 @@
             document.getElementById('bankAccount').textContent = '-';
             document.getElementById('basicPay').textContent = 'RM 0.00';
             document.getElementById('allowances').textContent = 'RM 0.00';
+            document.getElementById('fullAttendanceRow').style.display = 'none';
+            document.getElementById('fullAttendanceInput').value = '';
 
             // Clear Manual Inputs (Important: use .value for inputs)
             const manualInputs = [
-                'dailySalary', 'hourlySalary', 'ot1_5', 'ot2_0', 
+                'dailySalary', 'hourlySalary', 'ot1_5', 'ot2_0',
                 'employerEpf', 'employerSocso', 'employerEis',
                 'dailyDeductionDays', 'dailyDeduction', 'dailyDeductionTotal',
                 'hoursDeductionHours', 'hoursDeduction', 'hoursDeductionTotal'
@@ -2535,19 +2558,11 @@
                 return;
             }
 
-            const ok = await window.HwaYeapTheme.showConfirm({
-                title: 'HR reminder — Full Attendance Allowance',
-                message:
-                    'Please confirm that Full Attendance Allowance has been entered or calculated for this employee (e.g. in allowances or reimbursements).\n\nClick Save to continue, or Cancel to review.',
-                okText: 'Save',
-                cancelText: 'Cancel'
-            });
-            if (!ok) return;
-
             // Get all the salary data
             const salaryData = {
                 basicPay: parseFloat(document.getElementById('basicPay').textContent.replace('RM ', '')) || 0,
                 allowances: parseFloat(document.getElementById('allowances').textContent.replace('RM ', '')) || 0,
+                fullAttendanceAllowance: parseFloat(document.getElementById('fullAttendanceInput').value) || 0,
                 grossPay: parseFloat(document.getElementById('grossPayAmount').textContent.replace('RM ', '')) || 0,
                 // Add salary calculations
                 salaryCalculations: {
@@ -2715,8 +2730,9 @@ function renderOvertimeUI() {
             const basicPay = parseFloat(document.getElementById('basicPay').textContent.replace('RM ', '')) || 0;
             const overtimeTotal = parseFloat(document.getElementById('totalOvertime').textContent.replace('RM ', '')) || 0;
             const allowances = parseFloat(document.getElementById('allowances').textContent.replace('RM ', '')) || 0;
-            
-            const grossPay = basicPay + overtimeTotal + allowances;
+            const fullAttendance = parseFloat(document.getElementById('fullAttendanceInput').value) || 0;
+
+            const grossPay = basicPay + overtimeTotal + allowances + fullAttendance;
             document.getElementById('grossPayAmount').textContent = `RM ${formatNumber(grossPay)}`;
             updateNetPay(); // Update net pay when gross pay changes
         }
@@ -2749,11 +2765,12 @@ function renderOvertimeUI() {
 
         // Update net pay function to use A-B+C formula
         function updateNetPay() {
-            // A = Gross Pay (Basic Pay + Overtime + Allowances)
+            // A = Gross Pay (Basic Pay + Overtime + Allowances + Full Attendance)
             const basicPay = parseFloat(document.getElementById('basicPay').textContent.replace('RM ', '')) || 0;
             const overtimeTotal = parseFloat(document.getElementById('totalOvertime').textContent.replace('RM ', '')) || 0;
             const allowances = parseFloat(document.getElementById('allowances').textContent.replace('RM ', '')) || 0;
-            const grossPay = basicPay + overtimeTotal + allowances;
+            const fullAttendance = parseFloat(document.getElementById('fullAttendanceInput').value) || 0;
+            const grossPay = basicPay + overtimeTotal + allowances + fullAttendance;
 
             // B = Total Deductions
             const totalDeductions = parseFloat(document.getElementById('totalDeductions').textContent.replace('RM ', '')) || 0;
@@ -3057,6 +3074,16 @@ function renderOvertimeUI() {
 
                     document.getElementById('basicPay').textContent = `RM ${formatNumber(salaryData.basicPay || 0)}`;
                     document.getElementById('allowances').textContent = `RM ${formatNumber(salaryData.allowances || 0)}`;
+                    // Full Attendance Allowance
+                    const faaInput = document.getElementById('fullAttendanceInput');
+                    const faaRow = document.getElementById('fullAttendanceRow');
+                    if (salaryData.fullAttendanceAllowance) {
+                        faaInput.value = salaryData.fullAttendanceAllowance;
+                        faaRow.style.display = '';
+                    } else {
+                        faaInput.value = '';
+                        faaRow.style.display = 'none';
+                    }
                     // Assuming 'data' is the object returned from Firebase
                     document.getElementById('remarks').textContent = salaryData.remarks || '';
                     // Deductions - Add null checks
