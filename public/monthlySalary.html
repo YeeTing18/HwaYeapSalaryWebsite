@@ -991,6 +991,10 @@
                 display: grid !important;
                 grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             }
+            #fullAttendanceRow[style*="display:none"],
+            #fullAttendanceRow[style*="display: none"] {
+                display: none !important;
+            }
         }
         .bank-account {
     margin-left: -5px !important; /* Move bank account text left */
@@ -2376,7 +2380,16 @@
                 wrapper.style.width = '111.11%';
                 wrapper.style.position = 'relative';
 
-                wrapper.appendChild(voucherContainer.cloneNode(true));
+                const voucherClone = voucherContainer.cloneNode(true);
+                // Ensure hidden rows stay hidden in PDF (print CSS can override inline display:none)
+                const faaRowClone = voucherClone.querySelector('#fullAttendanceRow');
+                if (faaRowClone) {
+                    const originalFaaRow = document.getElementById('fullAttendanceRow');
+                    if (!originalFaaRow || originalFaaRow.style.display === 'none') {
+                        faaRowClone.style.setProperty('display', 'none', 'important');
+                    }
+                }
+                wrapper.appendChild(voucherClone);
                 if (remarksSection) {
                     wrapper.appendChild(remarksSection.cloneNode(true));
                 }
