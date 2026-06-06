@@ -50,7 +50,7 @@ async function sendWithGmailApi(payload) {
         from: `"Hwa Yeap Engineering" <${EMAIL_USER}>`,
         to: payload.recipientEmail,
         subject: `Salary Voucher - ${payload.month} ${payload.year}`,
-        text: `Dear ${payload.recipientName},\n\nPlease find attached your salary voucher.\n\nBest regards,\nHwa Yeap Engineering`,
+        text: `Dear ${payload.recipientName},\n\nPlease find attached your salary voucher for ${payload.month} ${payload.year}.\n\nIf there are any discrepancies, please notify the office within 14 days of receiving this slip.\n\nBest regards,\nHwa Yeap Engineering`,
         attachments: [{ filename: payload.fileName, content: payload.pdfBinary }]
     };
 
