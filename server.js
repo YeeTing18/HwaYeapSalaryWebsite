@@ -2,8 +2,7 @@ const express = require("express");
 const path = require("path");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const { google } = require("googleapis");
-const { Resend } = require("resend");
+const nodemailer = require("nodemailer");
 require("dotenv").config();
 
 const app = express();
@@ -15,11 +14,11 @@ app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
 // --- CREDENTIALS ---
+// Uses Gmail SMTP with App Password (never expires, no OAuth token rotation needed)
+// To set up: Google Account > Security > 2-Step Verification > App Passwords
+// Generate an App Password for "Mail" and set it as GMAIL_APP_PASSWORD env var
 const EMAIL_USER = process.env.EMAIL_USER || "abbey7341@gmail.com";
-const GMAIL_CLIENT_ID = process.env.GMAIL_CLIENT_ID;
-const GMAIL_CLIENT_SECRET = process.env.GMAIL_CLIENT_SECRET;
-const GMAIL_REFRESH_TOKEN = process.env.GMAIL_REFRESH_TOKEN;
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
 
 // --- HELPERS ---
 function pdfBufferFromClient(input) {
@@ -27,56 +26,30 @@ function pdfBufferFromClient(input) {
     return Buffer.from(b64, "base64");
 }
 
-function toGmailRaw(mimeBuf) {
-    return mimeBuf.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
+// --- EMAIL ENGINE ---
 
-// --- EMAIL ENGINES ---
+async function sendWithGmailSmtp(payload) {
+    if (!GMAIL_APP_PASSWORD) {
+        throw new Error("GMAIL_APP_PASSWORD is not set. Please add it to your environment variables.");
+    }
 
-async function sendWithGmailApi(payload) {
-    const oauth2Client = new google.auth.OAuth2(
-        GMAIL_CLIENT_ID,
-        GMAIL_CLIENT_SECRET,
-        "https://developers.google.com/oauthplayground"
-    );
-    oauth2Client.setCredentials({ refresh_token: GMAIL_REFRESH_TOKEN });
+    const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: EMAIL_USER,
+            pass: GMAIL_APP_PASSWORD,
+        },
+    });
 
-    const gmail = google.gmail({ version: "v1", auth: oauth2Client });
-    const MailComposer = require("nodemailer/lib/mail-composer");
-
-    const mailOptions = {
+    const info = await transporter.sendMail({
         from: `"Hwa Yeap Engineering" <${EMAIL_USER}>`,
         to: payload.recipientEmail,
         subject: `Salary Voucher - ${payload.month} ${payload.year}`,
         text: `Dear ${payload.recipientName},\n\nPlease find attached your salary voucher.\n\nBest regards,\nHwa Yeap Engineering`,
-        attachments: [{ filename: payload.fileName, content: payload.pdfBinary }]
-    };
-
-    const mimeBuf = await new Promise((res, rej) => {
-        new MailComposer(mailOptions).compile().build((err, buf) => err ? rej(err) : res(buf));
+        attachments: [{ filename: payload.fileName, content: payload.pdfBinary }],
     });
 
-    const res = await gmail.users.messages.send({
-        userId: "me",
-        requestBody: { raw: toGmailRaw(mimeBuf) }
-    });
-    return res.data;
-}
-
-async function sendWithResend(payload) {
-    const resend = new Resend(RESEND_API_KEY);
-    const { data, error } = await resend.emails.send({
-        from: "Hwa Yeap Engineering <onboarding@resend.dev>", 
-        to: payload.recipientEmail,
-        subject: `Salary Voucher - ${payload.month} ${payload.year}`,
-        text: `Dear ${payload.recipientName}, your salary voucher is attached.`,
-        attachments: [{ 
-            filename: payload.fileName, 
-            content: payload.pdfBinary.toString("base64") 
-        }]
-    });
-    if (error) throw error;
-    return data;
+    return info;
 }
 
 // --- MAIN ROUTE ---
@@ -87,26 +60,10 @@ app.post("/api/send-email", async (req, res) => {
         const pdfBinary = pdfBufferFromClient(pdfBuffer);
         const payload = { recipientEmail, recipientName, month, year, pdfBinary, fileName };
 
-        // 1. ALWAYS TRY GMAIL API FIRST (To use your abbey7341 address)
-        if (GMAIL_REFRESH_TOKEN && GMAIL_CLIENT_ID) {
-            try {
-                console.log("[Process] Attempting Gmail API...");
-                const result = await sendWithGmailApi(payload);
-                return res.status(200).json({ success: true, via: "Gmail-API", id: result.id });
-            } catch (gmailErr) {
-                console.error("[Fallback] Gmail API Failed:", gmailErr.message);
-                // If Gmail fails, the code will automatically move to Resend below
-            }
-        }
-
-        // 2. FALLBACK TO RESEND (If Gmail has invalid_grant or other errors)
-        if (RESEND_API_KEY) {
-            console.log("[Process] Attempting Resend API...");
-            const result = await sendWithResend(payload);
-            return res.status(200).json({ success: true, via: "Resend", id: result.id });
-        }
-
-        throw new Error("All mail providers failed. Check your tokens.");
+        console.log(`[Process] Sending email from ${EMAIL_USER} via Gmail SMTP...`);
+        const result = await sendWithGmailSmtp(payload);
+        console.log(`[Success] Email sent: ${result.messageId}`);
+        return res.status(200).json({ success: true, via: "Gmail-SMTP", id: result.messageId });
 
     } catch (finalError) {
         console.error("[Fatal Error]:", finalError.message);
