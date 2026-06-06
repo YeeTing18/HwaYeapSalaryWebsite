@@ -448,20 +448,27 @@
                                             <th>Bank Account</th>
                                             <th>Email</th>
                                             <th>Position</th>
-                                            <th>Status</th> 
+                                            <th>Status</th>
+                                            <th>Start Date</th>
+                                            <th>End Date</th>
                                             <th>Basic Pay</th>
                                             <th>Allowances</th>
+                                            <th>Daily Formula</th>
+                                            <th>Hourly Formula</th>
+                                            <th>OT 1.5 Formula</th>
+                                            <th>OT 2.0 Formula</th>
+                                            <th>Full Attendance</th>
                                             <th>Actions</th>
                                         </tr>
                                         <tr class="bg-light">
                                             <th><input type="text" id="filterName" class="form-control form-control-sm" placeholder="Search Name"></th>
-                                            <th></th> <th></th> <th></th> <th>
+                                            <th></th> <th></th> <th></th>
+                                            <th>
                                                 <select id="filterPosition" class="form-select form-select-sm">
                                                     <option value="All">All</option>
                                                     <option value="Intern">Intern</option>
                                                     <option value="Employee">Employee</option>
                                                     <option value="Resigned">Resigned</option>
-
                                                 </select>
                                             </th>
                                             <th>
@@ -471,7 +478,8 @@
                                                     <option value="INACTIVE">Inactive</option>
                                                 </select>
                                             </th>
-                                            <th></th> <th></th> <th>
+                                            <th></th> <th></th> <th></th> <th></th> <th></th> <th></th> <th></th> <th></th> <th></th>
+                                            <th>
                                                 <button class="btn btn-sm btn-link text-decoration-none text-white fw-bold" onclick="resetFilters()">
                                                     <i class="fas fa-undo-alt me-1"></i> Reset
                                                 </button>
@@ -582,8 +590,15 @@
                         ${isInactive ? 'INACTIVE' : 'ACTIVE'}
                     </span>
                 </td>
+                <td>${employeeData.startWorkDate || '-'}</td>
+                <td>${employeeData.endWorkDate || '-'}</td>
                 <td>RM ${employeeData.basicPay || '0'}</td>
                 <td>RM ${employeeData.allowances || '0'}</td>
+                <td>${employeeData.dailyFormula || '-'}</td>
+                <td>${employeeData.hourlyFormula || '-'}</td>
+                <td>${employeeData.ot15Formula || '-'}</td>
+                <td>${employeeData.ot20Formula || '-'}</td>
+                <td>${employeeData.fullAttendanceAllowance ? '✓ Yes' : 'No'}</td>
                 <td class="action-btns">
                     <button class="btn btn-sm btn-outline-primary" onclick="editEmployee('${employeeName}')">
                         <i class="fas fa-edit"></i>
